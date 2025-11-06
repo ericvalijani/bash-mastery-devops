@@ -36,5 +36,5 @@ get_system_info() {
   SYSTEM_INFO=("${info[@]}")  # global array
 }
 get_system_info
-echo "System info collected: ${SYSTEM_INFO[@]}"
+echo "System info collected: ${SYSTEM_INFO[*]}"
 
