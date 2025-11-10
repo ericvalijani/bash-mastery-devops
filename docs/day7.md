@@ -1,40 +1,16 @@
-# Day 7: Zero-Trust Security Pipeline — SAST, Secrets, SBOM, Trivy, Gitleaks, Semgrep, License Compliance
+# Day 7: Zero-Trust Security Pipeline
 
-> **Goal**: Build a **fully automated security pipeline** that catches **every secret, vulnerability, license violation, and supply-chain attack** before it reaches production — exactly how Google, Microsoft, and the US DoD secure their infrastructure.
+**All tutorials, tables, commands, and pro tips are now in the main README**  
+→ [Click here to view the full Day 7 content in README.md](https://github.com/sabermaraghi/bash-mastery-devops/blob/main/README.md#day-7-zero-trust-security-pipeline)
 
-## 1. Security Tools Stack (Industry Standard 2025)
+> This file is kept only for archival purposes and internal search.  
+> All up-to-date, rich, and high-visibility content lives in **README.md** to maximize exposure and impact.
 
-| Tool | Purpose | Used By |
-|------|-------|--------|
-| `gitleaks` | Detect hardcoded secrets (API keys, passwords) | GitHub, GitLab, Netflix |
-| `trivy` | SBOM + Vulnerability scanning (OS, containers, IaC) | Aqua, Toyota, VMware |
-| `semgrep` | SAST for Bash, YAML, Terraform, Docker | Uber, Snowflake, Dropbox |
-| `syft` + `grype` | Generate & scan SBOM | Anchore, Red Hat |
-| `licensee` | License compliance | GitHub |
-| `pre-commit` | Run all above on every commit | 95% of Fortune 500 |
+**Best practice used by top open-source projects (Kubernetes, Terraform, Prometheus, etc.):**
 
-## 2. Full Security Pipeline (CI + Pre-commit + GitHub Actions)
+> - **README.md** = Marketing + Onboarding + Showcase  
+> - **docs/** = Deep-dive technical reference + Archive
 
+This keeps the project professional, recruiter-friendly, and star-magnet while maintaining perfect organization.
 
-## 3. 100% Production-Grade Security Projects
-
-All scripts in `/scripts/security/`
-All **block merge on any finding**
-All **auto-remediate where possible**
-
-| # | Script | Security Feature |
-|---|--------|------------------|
-| 1 | `secret-rotator.sh` | Auto-rotate leaked secrets + alert |
-| 2 | `sbom-generator.sh` | Generate CycloneDX SBOM + scan with Trivy |
-| 3 | `iac-security-scan.sh` | Scan Terraform/K8s manifests with Trivy + Semgrep |
-| 4 | `license-auditor.sh` | Block GPL/AGPL, allow only MIT/Apache |
-| 5 | `supply-chain-guard.sh` | Verify all dependencies with in-toto + cosign |
-
-**All include:**
-- Zero false positives
-- Auto-fail CI on HIGH/CRITICAL
-- Structured SARIF output
-- Slack/Teams alert on findings
-- Auto-ticket creation (Jira/GitHub Issues)
-
-
+Last updated: November 10, 2025
