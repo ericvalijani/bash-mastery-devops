@@ -139,4 +139,20 @@ podman rm backup-api deploy-api health-api secret-api cost-api
 # Remove images (if needed)
 podman rmi localhost/backup-api:latest localhost/deploy-api:latest # ...
 
-
+charts/
+├── microservices/           ← Umbrella Chart 
+│   ├── Chart.yaml
+│   ├── values.yaml
+│   ├── values-prod.yaml
+│   ├── values-staging.yaml
+│   └── templates/
+│       ├── _helpers.tpl
+│       ├── ingress.yaml
+│       ├── networkpolicy.yaml
+│       └── ...
+├── backup-api/              ← Subchart 1
+├── deploy-api/              ← Subchart 2
+├── health-api/              ← Subchart 3
+├── secret-api/              ← Subchart 4
+├── cost-api/                ← Subchart 5
+└── monitoring/              ← Subchart 6 (Prometheus + Grafana)
