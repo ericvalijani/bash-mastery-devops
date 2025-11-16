@@ -9,9 +9,9 @@ IFS=$'\n\t'
 shopt -s inherit_errexit 2>/dev/null || true
 
 # === Paths ===
-readonly SCRIPT_DIR="$(cd "$(dirname "$(realpath "${BASH_SOURCE[0]}")")" && pwd)"
-source "$SCRIPT_DIR/../../lib/logging.sh"  # از روز ۱۰
-source "$SCRIPT_DIR/../../.env" 2>/dev/null || true
+readonly SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/../lib/logging.sh"  # از روز ۱۰
+source "$SCRIPT_DIR/.env" 2>/dev/null || true
 
 # === Logging with Secret Masking ===
 log() {
@@ -88,7 +88,7 @@ deploy() {
 }
 
 # === Run with retry (from lib/retry.sh) ===
-source "$SCRIPT_DIR/../../lib/retry.sh"
+source "$SCRIPT_DIR/../lib/retry.sh"
 retry 3 5 deploy
 
 log_info "Secure deployment completed."
