@@ -1,2 +1,19 @@
-external-sources=true
-# Optional: disable=SC2059, etc., if you want to move exclusions here
+name: ShellCheck Lint
+
+on:
+  push:
+    branches:
+      - main  # Adjust to your branch(es)
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run ShellCheck
+        uses: ludeeus/action-shellcheck@master
+        env:
+          SHELLCHECK_OPTS: -x -e SC2059 -e SC2034 -e SC1090  # -x enables external sources
