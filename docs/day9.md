@@ -45,3 +45,16 @@ MAX_RETRIES=3
 
 ## 4. Production Script: config-loader.sh
 
+## Usage
+
+# 1. Load config
+./scripts/advanced/day9/config-loader.sh
+
+# 2. Use in another script
+cat > scripts/advanced/day9/app.sh << 'EOF'
+#!/usr/bin/env bash
+source ./scripts/advanced/day9/config-loader.sh
+echo "API Call with key: $API_KEY"
+EOF
+chmod +x scripts/advanced/day9/app.sh
+./scripts/advanced/day9/app.sh
