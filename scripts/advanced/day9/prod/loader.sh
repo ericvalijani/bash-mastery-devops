@@ -1,18 +1,63 @@
 #!/usr/bin/env bash
+# File: scripts/advanced/day9/config-loader.sh
+# Purpose: Load, validate, and export config from .env
+
 set -euo pipefail
 
-CONFIG_FILE="${CONFIG_FILE:-./config.env}"
+# === Paths ===
+CONFIG_FILE="${CONFIG_FILE:-.env}"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
+# === Logging ===
+log() {
+  local level="$1"
+  shift
+  echo "[$(date +'%Y-%m-%d %H:%M:%S')] [$level] $*"
+}
+
+# === Load .env ===
 if [[ ! -f "$CONFIG_FILE" ]]; then
-  echo "Error: $CONFIG_FILE not found" >&2
+  log "ERROR" "Config file not found: $CONFIG_FILE"
   exit 1
 fi
 
+log "INFO" "Loading config from $CONFIG_FILE"
+# shellcheck source=.env
 source "$CONFIG_FILE"
 
-required_vars=(DB_HOST DB_USER API_KEY)
+# === Required Variables ===
+required_vars=(
+  "APP_ENV"
+  "DB_HOST"
+  "API_KEY"
+)
+
+missing=()
 for var in "${required_vars[@]}"; do
-  [[ -z "${!var:-}" ]] && echo "Error: $var is required" && exit 1
+  if [[ -z "${!var:-}" ]]; then
+    missing+=("$var")
+  fi
 done
 
-echo "Config loaded: $DB_USER@$DB_HOST"
+if [[ ${#missing[@]} -gt 0 ]]; then
+  log "ERROR" "Missing required variables: ${missing[*]}"
+  exit 1
+fi
+
+# === Set Defaults ===
+: "${DB_PORT:=5432}"
+: "${DEBUG:=false}"
+: "${LOG_LEVEL:=warn}"
+: "${MAX_RETRIES:=5}"
+
+# === Make readonly ===
+readonly APP_ENV DB_HOST DB_PORT API_KEY DEBUG LOG_LEVEL MAX_RETRIES
+
+# === Export all ===
+export APP_ENV DB_HOST DB_PORT API_KEY DEBUG LOG_LEVEL MAX_RETRIES
+
+log "SUCCESS" "Config loaded successfully"
+log "INFO" "Environment: $APP_ENV | DB: $DB_HOST:$DB_PORT | Debug: $DEBUG"
+
+# === Example usage ===
+echo "Connecting to database at $DB_HOST:$DB_PORT..."
