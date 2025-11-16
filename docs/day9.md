@@ -1,48 +1,47 @@
-# Day 9: Environment Variables & Sourcing
+# Day 9: Environment Variables & Sourcing in Bash
 
-> **Goal**: Control script behavior via environment, share configs, and build reusable libraries.
+> **Goal**: Configure scripts via environment, share reusable configs, and validate required variables — foundation of production scripting.
 
 ## 1. Environment Variables
 
-export DB_HOST="prod-db.example.com"
-export DEBUG=true
-
-./script.sh         # Inherits env
+export APP_ENV="production"
+export DB_HOST="10.0.0.10"
+export DEBUG=false
 
 ## 2. Sourcing Files
 
 # lib/config.sh
-DB_USER="admin"
-DB_PASS="secret123"
+export DB_USER="admin"
+export DB_PASS="s3cr3t"
 
 # main.sh
 source "./lib/config.sh"
 echo "Connecting to $DB_USER@$DB_HOST"
 
 ## 3. Best Practices
-- Use readonly for constants
-- Validate required vars
-- Use .env + source pattern
 
-## 4. Production Example: Config Loader
+Loads .env
+Validates required vars
+Sets defaults
+Logs config status
 
-#!/usr/bin/env bash
-set -euo pipefail
+---
 
-CONFIG_FILE="${CONFIG_FILE:-./config.env}"
+## Files : Step 3
 
-if [[ ! -f "$CONFIG_FILE" ]]; then
-  echo "Error: $CONFIG_FILE not found" >&2
-  exit 1
-fi
+### 1. `.env` ( In the root of repo)
 
-source "$CONFIG_FILE"
 
-required_vars=(DB_HOST DB_USER API_KEY)
-for var in "${required_vars[@]}"; do
-  [[ -z "${!var:-}" ]] && echo "Error: $var is required" && exit 1
-done
+vim .env
 
-echo "Config loaded: $DB_USER@$DB_HOST"
+# .env — Never commit secrets!
+APP_ENV=development
+DB_HOST=localhost
+DB_PORT=5432
+API_KEY=dev-key-123
+DEBUG=true
+LOG_LEVEL=info
+MAX_RETRIES=3
 
+## 4. Production Script: config-loader.sh
 
