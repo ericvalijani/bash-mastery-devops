@@ -9,7 +9,7 @@ IFS=$'\n\t'
 shopt -s inherit_errexit 2>/dev/null || true
 
 # === Paths ===
-readonly SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+readonly SCRIPT_DIR="$(cd "$(dirname "$(realpath "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/../../lib/logging.sh"  # از روز ۱۰
 source "$SCRIPT_DIR/../../.env" 2>/dev/null || true
 
