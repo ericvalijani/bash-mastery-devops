@@ -1,0 +1,23 @@
+name: Cluster Manifest Audit
+
+on:
+  push:
+    paths:
+      - '**/*.yaml'
+      - '**/*.yml'
+      - '**/*.json'
+  pull_request:
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run cluster auditor
+        run: |
+          bash scripts/advanced/day13/cluster-auditor.sh
+      - name: Upload report
+        uses: actions/upload-artifact@v4
+        with:
+          name: audit-report-$(date +%Y%m%d-%H%M%S)
+          path: /tmp/cluster-audit-*
