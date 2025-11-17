@@ -17,6 +17,11 @@ jobs:
         run: sudo apt-get install -y shellcheck
       - name: Run ShellCheck
         run: shellcheck scripts/advanced/day11/*.sh lib/*.sh
+      - name: Run ShellCheck with cross-file analysis
+        run: |
+          shellcheck -x \
+            scripts/advanced/day11/*.sh \
+            lib/*.sh
 
   secrets-scan:
     runs-on: ubuntu-latest
