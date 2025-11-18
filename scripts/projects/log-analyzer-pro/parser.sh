@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # scripts/projects/log-analyzer-pro/parser.sh
 parse_log_file() {
   local file="$1"
