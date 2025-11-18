@@ -4,7 +4,7 @@ set -euo pipefail
 
 readonly BASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$BASE_DIR/config.env" 2>/dev/null || true
-source "$BASE_DIR/../../lib/logging.sh"
+source "$BASE_DIR/../../../lib/logging.sh"
 source "$BASE_DIR/parser.sh"
 source "$BASE_DIR/reporter.sh"
 
