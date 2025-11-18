@@ -1,4 +1,4 @@
-i# .github/workflows/log-analyzer.yaml
+# .github/workflows/log-analyzer.yaml
 name: Log Analyzer Pro Test
 on: [push, workflow_dispatch]
 jobs:
