@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 # scripts/projects/log-analyzer-pro/reporter.sh
 generate_json_report() {
   jq -n \
