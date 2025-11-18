@@ -4,7 +4,7 @@ LABEL org.opencontainers.image.title="secret-api" \
       org.opencontainers.image.description="GDPR-compliant secret rotation"
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    bash curl jq openssl awscli google-cloud-sdk vault && \
+    bash curl jq openssl awscli && \
     rm -rf /var/lib/apt/lists/* && \
     useradd -m -u 1001 appuser && \
     mkdir -p /var/log /var/run && \
