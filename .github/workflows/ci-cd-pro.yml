@@ -1,0 +1,31 @@
+name: CI/CD Pro Pipeline
+
+on:
+  push:
+    branches: [develop, main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+  id-token: write
+
+jobs:
+  pipeline:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y buildah podman shellcheck bats-core shfmt
+          curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh -s -- -b /usr/local/bin
+          curl -sSfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
+
+      - name: Run CI/CD Pro Pipeline
+        env:
+          IMAGE_NAME: ghcr.io/${{ github.repository }}
+        run: |
+          bash scripts/projects/ci-cd-pro/ci-cd.sh
