@@ -93,3 +93,19 @@ graph TD
         secretKeyRef:
           name: alertmanager-secrets
           key: webhook_url
+
+## Day 17: CI/CD Scripts at Senior/Staff Level
+
+scripts/projects/ci-cd-pro/
+├── ci-cd.sh                    ← Orchestrator (main entry point)
+├── steps/
+│   ├── 10-lint.sh
+│   ├── 20-test.sh
+│   ├── 30-build.sh
+│   ├── 40-security.sh
+│   ├── 50-publish.sh
+│   └── 60-promote.sh
+├── lib/
+│   └── helpers.sh              ← Shared functions
+├── config.env                  ← Optional config (gitignored)
+└── README.md
