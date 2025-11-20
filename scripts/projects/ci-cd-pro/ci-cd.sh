@@ -21,13 +21,13 @@ log "Target image: ${IMAGE_NAME}:${VERSION}"
 
 # Run all steps in order (10-*.sh, 20-*.sh, etc.)
 for step_script in "${BASE_DIR}/steps"/[0-9][0-9]-*.sh; do
-  [[ -f "$step_script" ]] || continue
-  step_name="$(basename "$step_script")"
-  log "Executing step: $step_name"
-  source "$step_script" || {
-    log_error "Step failed: $step_name"
-    exit 1
-  }
+	[[ -f "$step_script" ]] || continue
+	step_name="$(basename "$step_script")"
+	log "Executing step: $step_name"
+	source "$step_script" || {
+		log_error "Step failed: $step_name"
+		exit 1
+	}
 done
 
 log "CI/CD Pipeline completed successfully!"
