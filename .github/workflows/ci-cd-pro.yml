@@ -19,7 +19,7 @@ jobs:
       - name: Install Buildah + Podman
         run: sudo apt-get update && sudo apt-get install -y buildah podman
 
-      - name: **Install Cosign**
+      - name: Install Cosign
         uses: sigstore/cosign-installer@v3.5.0
         with:
           cosign-release: 'v2.5.3'
