@@ -23,7 +23,12 @@ jobs:
         uses: sigstore/cosign-installer@v3.5.0
         with:
           cosign-release: 'v2.5.3'
-
+      
+      - name: Install Syft
+        run: |
+          curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh -s -- -b /usr/local/bin v0.125.0
+          syft version
+      
       - name: Generate SBOM
         run: |
           curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh
