@@ -1,5 +1,4 @@
 name: Container Build & Sign
-
 on:
   push:
     branches: [develop, main]
@@ -21,25 +20,29 @@ jobs:
 
       - name: Install Cosign
         uses: sigstore/cosign-installer@v3.5.0
-        with:
-          cosign-release: 'v2.5.3'
-      
+
       - name: Install Syft
         run: |
           curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh -s -- -b /usr/local/bin v1.37.0
           syft version
-      
+
+      - name: Build Image
+        run: |
+          buildah bud -t localhost/myapp:latest -f Containerfile .
+          echo "image=localhost/myapp:latest" >> $GITHUB_OUTPUT
+        id: build
+
       - name: Generate SBOM
         run: |
-          curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh
-          syft localhost/backup-api:latest -o cyclonedx-json > sbom.json
+          syft packages localhost/myapp:latest -o cyclonedx-json > sbom.json
+          echo "SBOM generated!"
 
       - name: Scan with Trivy
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: localhost/backup-api:latest
+          image-ref: localhost/myapp:latest
           severity: CRITICAL,HIGH
           exit-code: 1
 
       - name: Sign with Cosign
-        run: cosign sign --yes localhost/backup-api:latest
+        run: cosign sign --yes localhost/myapp:latest
