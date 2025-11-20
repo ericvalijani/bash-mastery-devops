@@ -1,31 +1,40 @@
-name: CI/CD Pro Pipeline
+name: Container Build & Sign
 
 on:
   push:
     branches: [develop, main]
-  pull_request:
   workflow_dispatch:
 
-permissions:
-  contents: read
-  packages: write
-  id-token: write
-
 jobs:
-  pipeline:
+  build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install dependencies
-        run: |
-          sudo apt-get update -y
-          sudo apt-get install -y buildah podman shellcheck bats-core shfmt
-          curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh -s -- -b /usr/local/bin
-          curl -sSfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
+      - name: Install Buildah + Podman
+        run: sudo apt-get update && sudo apt-get install -y buildah podman
 
-      - name: Run CI/CD Pro Pipeline
-        env:
-          IMAGE_NAME: ghcr.io/${{ github.repository }}
+      - name: **Install Cosign**
+        uses: sigstore/cosign-installer@v3.5.0
+        with:
+          cosign-release: 'v2.5.3'
+
+      - name: Generate SBOM
         run: |
-          bash scripts/projects/ci-cd-pro/ci-cd.sh
+          curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh
+          syft localhost/backup-api:latest -o cyclonedx-json > sbom.json
+
+      - name: Scan with Trivy
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: localhost/backup-api:latest
+          severity: CRITICAL,HIGH
+          exit-code: 1
+
+      - name: Sign with Cosign
+        run: cosign sign --yes localhost/backup-api:latest
