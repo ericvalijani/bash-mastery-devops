@@ -4,4 +4,4 @@ resources:
   - ../../base  # This references a base config (we'll create it next if missing)
 images:
   - name: ghcr.io/ericvalijani/bash-mastery-devops  # Your image repo (adjust if different)
-    newTag: 194fcc4
+    newTag: baf634a
