@@ -37,6 +37,8 @@ validate_manifest() {
     echo "$file" >> "$REPORT_DIR/invalid.txt"
   fi
 }
+
+export REPORT_DIR
 export -f validate_manifest
 
 # === Find potential secrets ===
