@@ -24,9 +24,21 @@ jobs:
         run: |
           export IMAGE_NAME=ghcr.io/${{ github.repository }}
           bash scripts/advanced/day16/container-builder.sh
+      
+      - name: Build & Push
+        id: build_push
+        run: |
+          export IMAGE_NAME=ghcr.io/${{ github.repository }}
+          bash scripts/advanced/day16/container-builder.sh
+          echo "digest=$(buildah images --digests | grep ${IMAGE_NAME##*/} | head -1 | awk '{print $2}')" >> $GITHUB_OUTPUT
+
+      - name: Install Cosign
+        if: success() && !env.ACT        
+        uses: sigstore/cosign-installer@v3
 
       - name: Sign with Cosign
-        uses: sigstore/cosign-installer@v3
-        with:
-          cosign-version: v2.2.1
-      - run: cosign sign --yes ghcr.io/${{ github.repository }}@${{ steps.build.outputs.digest }}
+        if: success() && !env.ACT
+        run: |
+          echo "Signing image with digest: ${{ steps.build_push.outputs.digest }}"
+          cosign sign --yes ${{ env.IMAGE_NAME }}@${{ steps.build_push.outputs.digest }}
+
