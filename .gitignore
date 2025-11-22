@@ -20,3 +20,4 @@ monitoring/alertmanager/config.yaml
 >>>>>>> feature/day8-full-microservices
 .env
 *.secret
+*.secrets

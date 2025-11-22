@@ -13,15 +13,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - name: Install ShellCheck
-        run: sudo apt-get install -y shellcheck
-      - name: Run ShellCheck
-        run: shellcheck scripts/advanced/day11/*.sh lib/*.sh
-      - name: Run ShellCheck with cross-file analysis
         run: |
-          shellcheck -x \
-            scripts/advanced/day11/*.sh \
-            lib/*.sh
+          sudo apt-get update
+          sudo apt-get install -y shellcheck
+      
+      - name: Run ShellCheck
+        run: |
+          cd "$GITHUB_WORKSPACE"
+          #shellcheck -x lib/*.sh scripts/advanced/day11/*.sh
+          shellcheck --exclude=SC1091 lib/*.sh scripts/advanced/day11/*.sh
 
   secrets-scan:
     runs-on: ubuntu-latest

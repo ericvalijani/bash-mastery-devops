@@ -17,7 +17,14 @@ install_tools() {
 
 # === Find all manifests ===
 find_manifests() {
-  find . -type f \( -name "*.yaml" -o -name "*.yml" -o -name "*.json" \) ! -path "*/.git/*"
+  find . -type f \( -name "*.yaml" -o -name "*.yml" -o -name "*.json" \) \
+  ! -path "*/.git/*" \
+  ! -path "./.github/workflows/*" \
+  ! -path "./charts/*/Chart.yaml" \
+  ! -path "./charts/*/values*.yaml" \
+  ! -path "./argocd/overlays/*/values*.yaml" \
+  ! -path "./*/kustomization.yaml" \
+  ! -name ".pre-commit-config.yaml"
 }
 
 # === Validate with kubeconform (parallel) ===
