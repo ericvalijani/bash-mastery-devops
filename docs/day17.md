@@ -19,6 +19,9 @@ bash-mastery-devops/
         │   └── 60-promote.sh
         └── lib/
             └── log.sh             ← shared logging functions
+    k8s/
+    │
+    └── overlays/production/kustomization.yaml ← created for promotion
 ```
 
 ## Features
