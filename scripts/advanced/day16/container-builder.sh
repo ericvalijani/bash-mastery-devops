@@ -23,19 +23,25 @@ done
 build_image() {
   log_info "Building $FULL_IMAGE using Buildah (rootless)..."
 
-  local ctr
-  ctr=$(buildah from docker.io/library/alpine:latest)
+  # ← NOW we are in repo root → "." = whole project
+  cd "$(git rev-parse --show-toplevel)"
 
-  buildah copy "$ctr" . /app
-  buildah run "$ctr" -- apk add --no-cache curl bash
+  local ctr=$(buildah from registry.hub.docker.com/library/alpine:latest)
+  buildah run "$ctr" -- apk --update add --no-cache --repository http://dl-cdn.alpinelinux.org/alpine/v3.20/main --repository http://dl-cdn.alpinelinux.org/alpine/v3.20/community bash curl jq git
+
+  # Copy only what we need from wherever it lives
+  buildah copy "$ctr" scripts/advanced/day16/entrypoint.sh      /app/entrypoint.sh
+  buildah copy "$ctr" scripts/advanced/day16/healthcheck.sh   /app/healthcheck.sh
+  # or copy whole scripts if you want
+  # buildah copy "$ctr" scripts /app/scripts
+
+  buildah run "$ctr" -- apk add --no-cache bash curl jq git
   buildah config --entrypoint '["/app/entrypoint.sh"]' "$ctr"
-  buildah config --label "built-by=bash-mastery" "$ctr"
-
+  buildah config --healthcheck 'CMD /app/healthcheck.sh' "$ctr"
   buildah commit "$ctr" "$FULL_IMAGE"
   buildah rm "$ctr"
-
-  log_info "Image built: $FULL_IMAGE"
 }
+
 
 # === Push with Podman ===
 push_image() {

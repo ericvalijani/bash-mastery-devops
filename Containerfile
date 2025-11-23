@@ -18,8 +18,15 @@ RUN apk add --no-cache \
     cosign
 
 # Copy entire scripts directory
-COPY scripts/projects/ci-cd-pro /usr/local/bin/ci-cd
+COPY scripts/ci-cd /usr/local/bin/ci-cd
 ENV PATH="/usr/local/bin/ci-cd:${PATH}"
 
 ENTRYPOINT ["ci-cd.sh"]
 CMD ["--help"]
+
+
+
+
+
+#FROM alpine:latest
+#CMD ["echo", "Hello from Day 17 Pipeline!"]

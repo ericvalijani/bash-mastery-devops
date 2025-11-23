@@ -1,5 +1,5 @@
 #!/bin/sh
 echo "Container started at $(date)"
-exec sleep infinity
 
-
+# Run the command passed to the container (this is the real entrypoint job)
+exec "$@"
