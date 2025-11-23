@@ -1,0 +1,28 @@
+# argocd/applications/root-app-of-apps.yaml
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: root
+  namespace: argocd
+  annotations:
+    notifications.argoproj.io/subscribe.slack: devops-alerts
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: app-of-apps-project
+  source:
+    repoURL: https://github.com/sabermaraghi/bash-mastery-devops.git
+    path: argocd/applications
+    targetRevision: HEAD
+    directory:
+      include: '{dev,staging,prod}.yaml'
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ApplyOutOfSyncOnly=true
