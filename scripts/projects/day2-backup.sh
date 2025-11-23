@@ -2,14 +2,16 @@
 set -euo pipefail
 
 backup_dir() {
-  local source="$1"
-  local dest="$2"
-  local timestamp=$(date +%Y%m%d_%H%M%S)
-  local backup_name="$(basename "$source")_$timestamp.tar.gz"
+	local source="$1"
+	local dest="$2"
+	local timestamp
+        timestamp=$(date +%Y%m%d_%H%M%S)
+        local backup_name
+        backup_name="$(basename "$source")_$timestamp.tar.gz"
 
-  echo "Backing up $source → $dest/$backup_name"
-  tar -czf "$dest/$backup_name" "$source"
-  echo "Done! Backup created."
+	echo "Backing up $source → $dest/$backup_name"
+	tar -czf "$dest/$backup_name" "$source"
+	echo "Done! Backup created."
 }
 
 # Default values
