@@ -1,0 +1,39 @@
+# argocd/applications/app-of-apps-set.yaml
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: environments
+  namespace: argocd
+spec:
+  generators:
+    - list:
+        elements:
+          - env: dev
+            path: argocd/overlays/dev
+            namespace: microservices-dev
+          - env: staging
+            path: argocd/overlays/staging
+            namespace: microservices-staging
+          - env: prod
+            path: charts/microservices
+            namespace: microservices-prod
+            helmValues: values-prod.yaml
+  template:
+    metadata:
+      name: 'microservices-{{env}}'
+    spec:
+      project: microservices
+      source:
+        repoURL: https://github.com/sabermaraghi/bash-mastery-devops.git
+        targetRevision: main
+        path: '{{path}}'
+        helm:
+          valueFiles:
+            - '{{helmValues}}'
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: '{{namespace}}'
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
