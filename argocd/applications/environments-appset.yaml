@@ -7,18 +7,9 @@ spec:
   generators:
     - list:
         elements:
-          - env: dev
-            overlay: dev
-            namespace: microservices-dev
-            project: microservices-project
-          - env: staging
-            overlay: staging
-            namespace: microservices-staging
-            project: microservices-project
-          - env: prod
-            overlay: prod
-            namespace: microservices-prod
-            project: default
+          - env: dev      ; overlay: dev      ; namespace: microservices-dev      ; project: microservices-project
+          - env: staging  ; overlay: staging  ; namespace: microservices-staging  ; project: microservices-project
+          - env: prod     ; overlay: prod     ; namespace: microservices-prod     ; project: default
   template:
     metadata:
       name: 'microservices-{{env}}'
