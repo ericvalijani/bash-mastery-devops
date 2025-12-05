@@ -32,7 +32,7 @@ Built by two Senior DevOps engineers in Germany — **100% Zero-Trust, SOC2-comp
 | 6 | **Contribute!** | Any change → 12 pre-commit hooks run automatically | Same | Only clean code gets merged |
 
 ## Repository Structure
-```mermaid
+```bash
 bash-mastery-devops/
 ├── scripts/          → 200+ production scripts (modular, tested)
 ├── docs/             → Daily lessons (Day 1–21)
@@ -119,7 +119,7 @@ graph TD
           key: webhook_url
 ```
 ## Day 17: CI/CD Scripts
-```mermaid
+```bash
 bash-mastery-devops/
 ├── Containerfile                  ← root of repo (standard!)
 ├── README.md
