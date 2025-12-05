@@ -19,19 +19,6 @@ eval "$USER_INPUT"
 # SAFE
 printf '%s' "$$ USER_INPUT" | grep -E '^[a-zA-Z0-9_-]+ $$'
 
-## 3. Secret Management
-- Never hardcode
-- Use .env + source
-- Mask in logs
-- Use read -s for passwords
-
-## 4. Production Script: secure-deploy.sh
-- Validates all inputs
-- Masks secrets in logs
-- Prevents injection
-- Runs with minimal privileges
-- Uses sudo only for specific commands
-
 never commit env file:
 
 APP_ENV=staging
@@ -62,5 +49,34 @@ export TARGET_HOST="evil.com; rm -rf /"
 # 3. Missing var test
 unset API_KEY
 ./scripts/advanced/day11/secure-deploy.sh  # should fail
+```
 
+## 3. Secret Management
+```bash
+Never hardcode
+Use .env + source
+Mask in logs
+Use read -s for passwords
+```
+## 4. Production Script: secure-deploy.sh
+```bash
+Validates all inputs
+Masks secrets in logs
+Prevents injection
+Runs with minimal privileges
+Uses sudo only for specific commands
+```
 
+## Day 11 Summary: Security Best Practices in Bash Scripting
+
+> Goal: Zero-vuln scripts: resist injection, protect secrets, least privilege for senior automation.
+
+- __Core Principles__: Fail fast (`set -euo pipefail`); validate input (whitelists/regex/bounds); no secrets in code (env/files); least privilege (non-root, targeted sudo); quote vars (`"$VAR"`, `${VAR@Q}`).
+
+- __Injection Prevention__: Avoid `eval`; use safe checks (e.g., grep regex). .gitignore for .env/*.secret. 
+
+- __Tests__: normal (valid env), injection (malicious host; fails), missing var (fails).
+
+- __Secret Mgmt__: No hardcodes; .env + source; mask logs; `read -s` for pwds.
+
+- __Prod Script__: secure-deploy.sh (validates inputs, masks secrets, anti-injection, min privileges, sudo only as needed).

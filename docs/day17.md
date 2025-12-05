@@ -8,18 +8,18 @@ bash-mastery-devops/
 │   └── workflows/
 │       └── ci-cd-pro.yaml             ← GitHub Actions pipeline
 └── scripts/
-    └── ci-cd-pro/
-        ├── ci-cd.sh               ← orchestrator (main entrypoint)
-        ├── steps/
-        │   ├── 10-lint.sh
-        │   ├── 20-test.sh
-        │   ├── 30-build.sh
-        │   ├── 40-scan.sh
-        │   ├── 50-publish.sh
-        │   └── 60-promote.sh
-        └── lib/
-            └── log.sh             ← shared logging functions
-    k8s/
+│   └── ci-cd-pro/
+│       ├── ci-cd.sh               ← orchestrator (main entrypoint)
+│       ├── steps/
+│       │   ├── 10-lint.sh
+│       │   ├── 20-test.sh
+│       │   ├── 30-build.sh
+│       │   ├── 40-scan.sh
+│       │   ├── 50-publish.sh
+│       │   └── 60-promote.sh
+│       └── lib/
+│           └── log.sh             ← shared logging functions
+└── k8s/
     │
     └── overlays/production/kustomization.yaml ← created for promotion
 ```
@@ -49,7 +49,7 @@ Clean Up If an Existing Package Is Blocking:
 Check if a package exists: Go to https://github.com/sabermaraghi/bash-mastery-devops/pkgs/container/bash-mastery-devops (or your GitHub profile > Packages tab).
 
 Re-Authenticate to GHCR:
-echo "YOUR_NEW_PAT" | podman login ghcr.io -u sabermaraghi --password-stdin
+echo `"YOUR_NEW_PAT"` | podman login ghcr.io -u sabermaraghi --password-stdin
 
 Regenerate a Classic PAT with Expanded Scopes:
 Go to GitHub > Settings > Developer settings > Personal access tokens > Tokens (classic) > Generate new token (classic).
