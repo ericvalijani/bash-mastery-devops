@@ -70,7 +70,7 @@ bash-mastery-devops/
 | 05 | Arrays, Associative Arrays, JSON Processing, Parallel Execution & Real-World API Integration | [Doc 5](./docs/day5.md) |
 | 06 | Modular Bash Libraries, Unit Testing with BATS, Code Coverage, Pre-commit Hooks | [Doc 6](./docs/day6.md) |
 | 07 | Zero-Trust Security Pipeline | [Doc 7](./docs/day7.md) |
-| 08 | 5 Production-Ready Microservices with FastAPI + Bash + Zero-Trust Security | [Doc 8](./docs/day8.md) |
+| 08 | Process Management & Signals | [Doc 8](./docs/day8.md) |
 | 09 | Environment Variables & Sourcing in Bash | [Doc 9](./docs/day9.md) |
 | 10 | Modular Scripting & Reusable Libraries | [Doc 10](./docs/day10.md) |
 | 11 | Security Best Practices in Bash Scripting | [Doc 11](./docs/day11.md) |
