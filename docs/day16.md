@@ -19,11 +19,8 @@
 - Cleans up everything
 - 100% idempotent & reproducible
 
-## Executing Shell Script
-chmod +x scripts/advanced/day16/container-builder.sh
-chmod +x escripts/advanced/day16/ntrypoint.sh hscripts/advanced/day16/ealthcheck.sh
-
-# Actual Test:
+## Test:
+```bash
 # Set registry login 
 podman login ghcr.io
 
@@ -35,3 +32,4 @@ podman login ghcr.io
 # Pushing...
 # Signing with Cosign...
 # SUCCESS: Secure container pipeline completed
+```

@@ -1,4 +1,5 @@
 # bash-mastery-devops
+
 **Senior → Staff → Principal Level | 21-Day Zero-Trust Bash Mastery | FAANG-Approved**
 
 [![Security: Passing](https://img.shields.io/badge/security-passing-brightgreen?style=flat-square&logo=shield)](https://github.com/sabermaraghi/bash-mastery-devops/security/code-scanning)
@@ -31,7 +32,7 @@ Built by two Senior DevOps engineers in Germany — **100% Zero-Trust, SOC2-comp
 | 6 | **Contribute!** | Any change → 12 pre-commit hooks run automatically | Same | Only clean code gets merged |
 
 ## Repository Structure
-
+```bash
 bash-mastery-devops/
 ├── scripts/          → 200+ production scripts (modular, tested)
 ├── docs/             → Daily lessons (Day 1–21)
@@ -43,26 +44,48 @@ bash-mastery-devops/
 │   └── workflows/    → Zero-Trust CI/CD + SARIF upload
 ├── .pre-commit-config.yaml → 12 security hooks
 └── setup.sh / setup.ps1 → One-click install
-
-
+```
 ## Day-by-Day Progress (21 Days to Principal)
 
 | Day | Topic | Level | Status |
 |-----|------|-------|--------|
-| 1–5 | Core Bash, Arrays, JSON, Parallel | 
+| 1–5 | Core Bash, Arrays, JSON, Parallel |
 | 6–7 | Modular Libraries, BATS Testing, Zero-Trust Security |
 | 8–12 | Docker, Buildah, Cosign, SLSA, Distroless | Staff |
 | 13–18 | Kubernetes Operators, ArgoCD, GitOps | Principal |
-| 19–21 | Chaos Engineering, Self-Healing, Cost Optimization | Principal | 
-
+| 19–21 | Chaos Engineering, Self-Healing, Cost Optimization | Principal |
 
 > 21+ of practical learning with **Bash, FastAPI, Kubernetes, ArgoCD, SOPS, Cosign, Trivy**
 
 ---
 
+## Daily Docs
+
+|Day|Topic|Doc|
+|---|---------|--------|
+| 01 | Intro to Bash - variables, conditionals, and args with examples | [Doc 1](./docs/day1.md) |
+| 02 | Loops, Functions, and Arguments in Bash | [Doc 2](./docs/day2.md) |
+| 03 | File I/O, Redirection, Pipes, find, grep, sed, awk | [Doc 3](./docs/day3.md) |
+| 04 | Error Handling, Debugging, Traps, Signals, Logging | [Doc 4](./docs/day4.md) |
+| 05 | Arrays, Associative Arrays, JSON Processing, Parallel Execution & Real-World API Integration | [Doc 5](./docs/day5.md) |
+| 06 | Modular Bash Libraries, Unit Testing with BATS, Code Coverage, Pre-commit Hooks | [Doc 6](./docs/day6.md) |
+| 07 | Zero-Trust Security Pipeline | [Doc 7](./docs/day7.md) |
+| 08 | Process Management & Signals | [Doc 8](./docs/day8.md) |
+| 09 | Environment Variables & Sourcing in Bash | [Doc 9](./docs/day9.md) |
+| 10 | Modular Scripting & Reusable Libraries | [Doc 10](./docs/day10.md) |
+| 11 | Security Best Practices in Bash Scripting | [Doc 11](./docs/day11.md) |
+| 12 | Performance Optimization in Bash | [Doc 12](./docs/day12.md) |
+| 13 | Mastering Unix Tools Integration | [Doc 13](./docs/day13.md) |
+| 14 | Mid-Project — Distributed Log Analyzer Pro | [Doc 14](./docs/day14.md) |
+| 15 | Git-Driven Auto-Deploy (The Senior Way) | [Doc 15](./docs/day15.md) |
+| 16 | Rootless Container Scripting with Buildah & Podman | [Doc 16](./docs/day16.md) |
+| 17 | Production-Grade Modular CI/CD Framework | [Doc 17](./docs/day17.md) |
+
+
 ## Day 8: Microservices with FastAPI + Bash + Helm + ArgoCD
 
 ### Features
+
 - **5 Complete Micreservice**: `backup`, `deploy`, `health`, `secret`, `cost`
 - **FastAPI REST API** با OpenAPI
 - **Bash Orchestrator** با `set -euo pipefail`
@@ -73,12 +96,13 @@ bash-mastery-devops/
 **Zero secrets in code** — Push Protection فعال
 
 ### Architecture
+
 ```mermaid
 graph TD
     A[ArgoCD] --> B[Helm Charts]
     B --> C[FastAPI + Bash]
     C --> D[Kubernetes]
-
+```
 
 
 ## Secret Management (Production-Grade)
@@ -86,26 +110,35 @@ graph TD
 - **No secrets in code** — Active Push Protection
 - **SOPS + GitHub Actions**
 - **Secret in runtime**
-
+```bash
   env:
     - name: SLACK_WEBHOOK
       valueFrom:
         secretKeyRef:
           name: alertmanager-secrets
           key: webhook_url
-
-## Day 17: CI/CD Scripts at Senior/Staff Level
-
-scripts/projects/ci-cd-pro/
-├── ci-cd.sh                    ← Orchestrator (main entry point)
-├── steps/
-│   ├── 10-lint.sh
-│   ├── 20-test.sh
-│   ├── 30-build.sh
-│   ├── 40-security.sh
-│   ├── 50-publish.sh
-│   └── 60-promote.sh
-├── lib/
-│   └── helpers.sh              ← Shared functions
-├── config.env                  ← Optional config (gitignored)
-└── README.md
+```
+## Day 17: CI/CD Scripts
+```bash
+bash-mastery-devops/
+├── Containerfile                  ← root of repo (standard!)
+├── README.md
+├── .github/
+│   └── workflows/
+│       └── ci-cd-pro.yaml             ← GitHub Actions pipeline
+└── scripts/
+│   └── ci-cd-pro/
+│       ├── ci-cd.sh               ← orchestrator (main entrypoint)
+│       ├── steps/
+│       │   ├── 10-lint.sh
+│       │   ├── 20-test.sh
+│       │   ├── 30-build.sh
+│       │   ├── 40-scan.sh
+│       │   ├── 50-publish.sh
+│       │   └── 60-promote.sh
+│       └── lib/
+│           └── log.sh             ← shared logging functions
+└── k8s/
+    │
+    └── overlays/production/kustomization.yaml ← created for promotion
+```

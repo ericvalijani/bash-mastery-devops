@@ -19,8 +19,8 @@
 - Generates SARIF report
 - Uses `xargs -P`, `find`, `parallel`
 
-Test:
-
+## Test:
+```bash
 # Run in your repo root
 ./scripts/advanced/day13/cluster-auditor.sh
 
@@ -35,3 +35,4 @@ Test:
 #   { "kind": "Secret", "count": 12 }
 # ]
 # [SUCCESS] Audit completed in 7.842s
+```
