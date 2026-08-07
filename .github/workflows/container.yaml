@@ -20,25 +20,16 @@ jobs:
         run: |
           sudo apt-get update && sudo apt-get install -y buildah podman
 
-      - name: Build & Push
-        run: |
-          export IMAGE_NAME=ghcr.io/${{ github.repository }}
-          bash scripts/advanced/day16/container-builder.sh
-      
-      - name: Build & Push
-        id: build_push
-        run: |
-          export IMAGE_NAME=ghcr.io/${{ github.repository }}
-          bash scripts/advanced/day16/container-builder.sh
-          echo "digest=$(buildah images --digests | grep ${IMAGE_NAME##*/} | head -1 | awk '{print $2}')" >> $GITHUB_OUTPUT
-
       - name: Install Cosign
-        if: success() && !env.ACT        
+        if: success() && !env.ACT
         uses: sigstore/cosign-installer@v3
 
-      - name: Sign with Cosign
-        if: success() && !env.ACT
+      - name: Login to GHCR
         run: |
-          echo "Signing image with digest: ${{ steps.build_push.outputs.digest }}"
-          cosign sign --yes ${{ env.IMAGE_NAME }}@${{ steps.build_push.outputs.digest }}
+          echo "${{ secrets.GITHUB_TOKEN }}" | podman login ghcr.io -u ${{ github.actor }} --password-stdin
+
+      - name: Build, Push & Sign
+        run: |
+          export IMAGE_NAME=ghcr.io/${{ github.repository }}
+          bash scripts/advanced/day16/container-builder.sh
 

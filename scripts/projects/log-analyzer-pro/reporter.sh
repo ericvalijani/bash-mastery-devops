@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
 # scripts/projects/log-analyzer-pro/reporter.sh
 generate_json_report() {
-  jq -n \
+  jq -Rn \
     --arg ts "$(date -u +"%Y-%m-%dT%H:%M:%SZ")" \
-    '{
+    '[inputs | select(length > 0) | split("\t")] as $rows |
+    {
       generated_at: $ts,
-      total_files: (input_filename | length),
+      total_files: ($rows | length),
       services: [
-        inputs
-        | split("\t")
+        $rows[]
         | {service: .[0], errors: (.[1]|tonumber), warnings: (.[2]|tonumber), info: (.[3]|tonumber)}
       ]
     }' /tmp/.log-analyzer-tmp-*.txt

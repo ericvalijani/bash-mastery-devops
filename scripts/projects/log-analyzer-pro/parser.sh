@@ -5,7 +5,7 @@ parse_log_file() {
   local -A counters=([error]=0 [warn]=0 [info]=0)
   local service="unknown"
 
-  [[ "$file" =~ /([^/]+)\.log$ ]] && service="${BASH_REMATCH[1]}"
+  [[ "$file" =~ ([^/]+)\.log$ ]] && service="${BASH_REMATCH[1]}"
 
   mapfile -t lines < "$file"
   for line in "${lines[@]}"; do
