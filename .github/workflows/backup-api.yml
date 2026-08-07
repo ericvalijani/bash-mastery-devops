@@ -24,10 +24,13 @@ jobs:
           cd microservice/backup/docker
           bash ./build.sh
 
+      - name: Load image into Docker
+        run: buildah push localhost/backup-api:latest docker-daemon:localhost/backup-api:latest
+
       - name: Generate SBOM
         run: |
           curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh -s -- -b /usr/local/bin
-          syft containers-storage:localhost/backup-api:latest -o cyclonedx-json > sbom.json
+          syft localhost/backup-api:latest -o cyclonedx-json > sbom.json
 
       - name: Scan with Trivy
         uses: aquasecurity/trivy-action@master
