@@ -26,7 +26,7 @@ jobs:
 
       - name: Generate SBOM
         run: |
-          curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh
+          curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh -s -- -b /usr/local/bin
           syft localhost/backup-api:latest -o cyclonedx-json > sbom.json
 
       - name: Scan with Trivy

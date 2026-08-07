@@ -16,15 +16,20 @@ jobs:
 
       - name: Install Tools
         run: |
-          curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh
-          curl -sSfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh
+          curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh -s -- -b /usr/local/bin
+          curl -sSfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
+
+      - name: Install Cosign
+        uses: sigstore/cosign-installer@v3
 
       - name: Build & Secure
         run: |
           for svc in backup deploy health secret cost; do
-            cd microservice/$svc
-            ../common/build.sh $svc
-            syft localhost/$svc-api:latest -o cyclonedx-json > sbom-$svc.json
-            cosign sign --yes localhost/$svc-api:latest
-            trivy image --exit-code 1 --severity HIGH,CRITICAL localhost/$svc-api:latest
+            (
+              cd microservice/$svc
+              ../common/build.sh $svc
+              syft localhost/$svc-api:latest -o cyclonedx-json > sbom-$svc.json
+              cosign sign --yes localhost/$svc-api:latest
+              trivy image --exit-code 1 --severity HIGH,CRITICAL localhost/$svc-api:latest
+            )
           done

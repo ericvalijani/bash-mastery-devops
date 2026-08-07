@@ -21,6 +21,13 @@ jobs:
       - name: Build Image
         run: cd microservice/health && ./docker/build.sh
 
+      - name: Install Tools
+        run: |
+          curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh -s -- -b /usr/local/bin
+
+      - name: Install Cosign
+        uses: sigstore/cosign-installer@v3
+
       - name: Generate SBOM
         run: syft localhost/health-api:v1.0.0 -o cyclonedx-json > sbom-health.json
 
