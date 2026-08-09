@@ -47,6 +47,7 @@ jobs:
           severity: CRITICAL
           exit-code: 0
           trivyignores: .trivyignore
+          scanners: vuln
 
       - name: Scan with Trivy
         uses: aquasecurity/trivy-action@master
@@ -57,6 +58,7 @@ jobs:
           severity: CRITICAL
           exit-code: 1
           trivyignores: .trivyignore
+          scanners: vuln
 
       - name: Upload SARIF
         if: always()
