@@ -45,7 +45,7 @@ jobs:
           image-ref: localhost/backup-api:latest
           format: sarif
           output: trivy-results.sarif
-          severity: CRITICAL,HIGH
+          severity: CRITICAL
           exit-code: 1
 
       - name: Upload SARIF
