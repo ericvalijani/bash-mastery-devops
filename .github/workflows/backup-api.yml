@@ -12,6 +12,7 @@ jobs:
       contents: read
       packages: write
       id-token: write
+      security-events: write
 
     steps:
       - uses: actions/checkout@v4
@@ -26,6 +27,12 @@ jobs:
 
       - name: Load image into Docker
         run: buildah push localhost/backup-api:latest docker-daemon:localhost/backup-api:latest
+
+      - name: Start local registry
+        run: docker run -d -p 5000:5000 --name registry registry:2
+
+      - name: Push to local registry
+        run: buildah push --tls-verify=false localhost/backup-api:latest localhost:5000/backup-api:latest
 
       - name: Generate SBOM
         run: |
@@ -51,4 +58,4 @@ jobs:
         uses: sigstore/cosign-installer@v3
         with:
           cosign-version: 'v2.2.1'
-      - run: cosign sign --yes localhost/backup-api:latest
+      - run: cosign sign --yes localhost:5000/backup-api:latest
