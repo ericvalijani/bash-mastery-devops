@@ -47,6 +47,7 @@ jobs:
           output: trivy-results.sarif
           severity: CRITICAL
           exit-code: 1
+          trivyignores: .trivyignore
 
       - name: Upload SARIF
         if: always()

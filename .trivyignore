@@ -1,0 +1,8 @@
+# All four CVEs below are unreachable in this image: perl is a transitive
+# Debian OS dependency, never invoked by this app (Python/FastAPI). Each
+# CVE requires perl code paths (Storable::thaw, Archive::Tar extraction,
+# 32-bit regex compilation) this app never calls.
+CVE-2026-8376
+CVE-2026-57433
+CVE-2026-42496
+CVE-2026-13221

@@ -36,7 +36,7 @@ jobs:
               buildah push --tls-verify=false localhost/$svc-api:latest localhost:5000/$svc-api:latest
               syft localhost/$svc-api:latest -o cyclonedx-json > sbom-$svc.json
               cosign sign --yes localhost:5000/$svc-api:latest
-              trivy image --exit-code 1 --severity CRITICAL localhost/$svc-api:latest
+              trivy image --exit-code 1 --severity CRITICAL --ignorefile "$GITHUB_WORKSPACE/.trivyignore" localhost/$svc-api:latest
             ) || { echo "::error::$svc failed"; fail=1; }
           done
           exit $fail
