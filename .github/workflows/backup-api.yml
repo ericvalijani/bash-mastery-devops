@@ -39,24 +39,25 @@ jobs:
           curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh -s -- -b /usr/local/bin
           syft localhost/backup-api:latest -o cyclonedx-json > sbom.json
 
-      - name: Trivy report (human-readable)
+      - name: Scan with Trivy (gate)
         uses: aquasecurity/trivy-action@master
         with:
           image-ref: localhost/backup-api:latest
           format: table
           severity: CRITICAL
-          exit-code: 0
+          exit-code: 1
           trivyignores: .trivyignore
           scanners: vuln
 
-      - name: Scan with Trivy
+      - name: Scan with Trivy (SARIF for Security tab)
+        if: always()
         uses: aquasecurity/trivy-action@master
         with:
           image-ref: localhost/backup-api:latest
           format: sarif
           output: trivy-results.sarif
           severity: CRITICAL
-          exit-code: 1
+          exit-code: 0
           trivyignores: .trivyignore
           scanners: vuln
 
