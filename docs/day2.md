@@ -1,119 +1,147 @@
-# Day 2: Loops, Functions, and Arguments in Bash
+# Day 2 — Loops, Functions, and Argument Parsing
 
-**Goal**: Master `for`, `while`, `until` loops and Bash functions with best practices.
-**Senior DevOps Tips**: Always use `set -euo pipefail`, `local` variables in functions, and quote variables.
+Today's goal: master the three loop types (`for`, `while`, `until`), write functions
+the safe way (`local` variables, quoted arguments), and level up argument handling
+with `getopts`.
 
 ---
 
-## 1. For Loop
+## 📁 Scripts for today
 
-### 1.1 Simple list
+| Script | Path | What it actually does | Try it |
+|---|---|---|---|
+| **Loops** | `scripts/basics/loops.sh` | Runs through every loop type: a simple list, a file glob, a C-style counter, a `while`, reading a file line-by-line, and an `until` timer | `bash scripts/basics/loops.sh` |
+| **Functions** | `scripts/basics/functions.sh` | Defines and calls 4 functions: a greeting with a timestamp, an adder that returns a value, a backup helper with default arguments, and one that collects system info into a global array | `bash scripts/basics/functions.sh` |
+| **Getopts Arguments** | `scripts/basics/args-getopts.sh` | Professional-style flag parsing — reads `-n NAME -a AGE` and an optional `-v` verbose flag | `bash scripts/basics/args-getopts.sh -n Ali -a 30 -v` |
+| **Backup** (today's mini-project) | `scripts/projects/day2-backup.sh` | Takes a source folder and destination, and creates a timestamped `.tar.gz` backup of it | `bash scripts/projects/day2-backup.sh ~/documents /tmp/backups` |
 
+---
+
+## 1. For loops
+
+**Simple list:**
 ```bash
-#!/bin/bash
-set -euo pipefail
-
 for fruit in apple banana cherry date; do
   echo "I like $fruit"
 done
 ```
-### 1.2 Loop over files
+
+**Loop over files** — matches every script in `scripts/basics/`:
 ```bash
-for file in scripts/basics/day2/*.sh; do
+for file in scripts/basics/*.sh; do
   echo "Found script: $file"
 done
 ```
-### 1.3 C-style for loop
+
+**C-style, when you need a counter:**
 ```bash
-for ((i=1; i<=5; i++)); do
+for ((i = 1; i <= 5; i++)); do
   echo "Count: $i"
 done
 ```
-## 2. While & Until Loops
-### 2.1 While loop with counter
 
+---
+
+## 2. While & Until loops
+
+**While, with a counter:**
 ```bash
 count=1
-while [ $count -le 5 ]; do
+while [[ $count -le 5 ]]; do
   echo "While count: $count"
   ((count++))
 done
 ```
-### 2.2 Read file line by line
 
+**Read a file line by line** — the `IFS= read -r` pattern is the safe way to do this,
+it stops Bash from trimming whitespace or mangling backslashes:
 ```bash
 while IFS= read -r line; do
   echo "Line: $line"
 done < README.md
 ```
-### 2.3 Until loop (runs until condition is true)
 
+**Until — the opposite of while, runs *until* a condition becomes true:**
 ```bash
 seconds=0
-until [ $seconds -ge 3 ]; do
+until [[ $seconds -ge 3 ]]; do
   echo "Waiting... $seconds seconds"
   sleep 1
   ((seconds++))
 done
 ```
-## 3. Functions – Best Practices
-### 3.1 Basic function with local variables
+
+---
+
+## 3. Functions — the right way
+
+- Always declare variables inside a function as `local` — otherwise they leak into the rest of your script and can silently overwrite something.
+- To "return" a value from a function, `echo` it and capture it with `$(...)` — Bash's `return` keyword only returns numeric exit codes, not real data.
+
+**Basic function:**
 ```bash
 greet() {
-  local name="$1"           # local 
-  local timestamp=$(date +%F_%H:%M:%S)
+  local name="$1"
+  local timestamp
+  timestamp=$(date +%F_%H:%M:%S)
   echo "[$timestamp] Hello, $name! Welcome to Bash mastery."
 }
-
 greet "DevOps Engineer"
 ```
 
-
-
-### 3.2 Function with return value (use echo, not return for strings)
+**Returning a value:**
 ```bash
 add() {
   local a=$1
   local b=$2
-  echo $((a + b))           
+  echo $((a + b))
 }
-
-result=$(add 15 27)         
+result=$(add 15 27)
 echo "15 + 27 = $result"
 ```
 
-
-### 3.3 Function with default arguments
+**Default arguments** — `${1:-/home}` means "use arg 1, or `/home` if nothing was passed":
 ```bash
 backup() {
-  local src="${1:-/home}"   
+  local src="${1:-/home}"
   local dest="${2:-/backup}"
   echo "Backing up $src → $dest at $(date)"
 }
-backup                    # → uses default
-backup /etc /var/backup   # → custom choice
+backup                  # uses defaults
+backup /etc /var/backup # custom paths
 ```
 
-### 3.4 Advanced: Return multiple values via global array
+**Returning multiple values** — Bash functions can't return arrays directly, so the
+common pattern is to build the array inside the function and assign it to a global
+variable at the end:
 ```bash
 get_system_info() {
   local info=()
   info+=("user:$(whoami)")
   info+=("host:$(hostname)")
   info+=("uptime:$(uptime -p)")
-  SYSTEM_INFO=("${info[@]}")  # global array
+  SYSTEM_INFO=("${info[@]}") # global array
 }
 get_system_info
 echo "System info collected: ${SYSTEM_INFO[@]}"
 ```
-## 4. Advanced Argument Handling
-### 4.1 getopts – Professional argument parsing
+
+---
+
+## 4. Professional argument parsing with `getopts`
+
+Positional arguments (`$1`, `$2`) get confusing fast once a script takes more than
+one or two inputs. `getopts` lets people call your script with named flags instead,
+in any order: `-n Ali -a 30` instead of just `Ali 30`.
+
+**Script** (`scripts/basics/args-getopts.sh`):
 ```bash
 #!/bin/bash
 set -euo pipefail
 
 usage() {
   echo "Usage: $0 -n NAME -a AGE [-v]"
+  echo "Example: $0 -n Ali -a 25 -v"
   exit 1
 }
 
@@ -127,44 +155,60 @@ while getopts "n:a:v" opt; do
   esac
 done
 
-[[ -z "$name" || -z "$age" ]] && usage
+[[ -z "${name:-}" || -z "${age:-}" ]] && usage
 
 echo "Name: $name, Age: $age"
-((verbose)) && echo "Verbose mode enabled"
+(( verbose )) && echo "Verbose mode enabled"
 ```
-### Run examples:
+**Run it:**
 ```bash
 ./args-getopts.sh -n Ali -a 30
 ./args-getopts.sh -n Ali -a 30 -v
 ```
-## Day 2 Summary: Loops, Functions, Args in Bash
 
-- __For Loops__: List iteration (e.g., fruits), file glob (e.g., `*.sh`), C-style (`((i=1; i<=5; i++))`).
+---
 
-- __While/Until__: Counter-based while, file reading (`IFS= read -r`), until condition true (e.g., timed wait with `sleep`).
+## 5. Today's mini-project — Backup
 
-- __Functions__: Basic with locals & args (e.g., greet with timestamp), return via `echo` (e.g., add), defaults (`${1:-val}`), multi-return via global array (e.g., system info).
+Put loops, functions, and default arguments together into something actually useful:
+a script that backs up any folder into a timestamped `.tar.gz` file.
 
-- __Adv Args__: `getopts` for flags (e.g., `-n name -a age -v`), with usage & validation.
+**File:** `scripts/projects/day2-backup.sh`
+```bash
+#!/bin/bash
+set -euo pipefail
 
-Examples: Run `args-getopts.sh` with options for output.
+backup_dir() {
+  local source="$1"
+  local dest="$2"
+  local timestamp
+  timestamp=$(date +%Y%m%d_%H%M%S)
+  local backup_name
+  backup_name="$(basename "$source")_$timestamp.tar.gz"
 
+  echo "Backing up $source → $dest/$backup_name"
+  tar -czf "$dest/$backup_name" "$source"
+  echo "Done! Backup created."
+}
 
+# Default values
+SRC="${1:-$HOME/documents}"
+DEST="${2:-/tmp/backups}"
 
+mkdir -p "$DEST"
+backup_dir "$SRC" "$DEST"
+```
+**Run it:** `./day2-backup.sh ~/documents /tmp/backups`
 
+---
 
+## Recap
 
+| Concept | One-liner |
+|---|---|
+| For loop | `for x in list; do ... done`, or `for ((i=1;i<=5;i++))` for a counter |
+| While / Until | `while [[ cond ]]; do ... done` runs *while* true, `until` runs until true |
+| Functions | Always use `local` inside them; `echo` + `$(...)` to "return" a value |
+| Getopts | `while getopts "n:a:v" opt; do case $opt in ... esac; done` for named flags |
 
-
-
-
-
-
-
-
-
-
-
-
-
-
+Next up: **Day 3 — File I/O, Redirection, Pipes, `find`, `grep`, `sed`, `awk`.**
