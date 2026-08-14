@@ -9,4 +9,4 @@ echo "Users with /bin/bash:"
 grep "/bin/bash" /etc/passwd | awk -F: '{print $1, $6}' | column -t
 
 echo -e "\nLast login times:"
-lastlog -u 1000-60000 | tail -20
+journalctl _COMM=sshd | tail -20

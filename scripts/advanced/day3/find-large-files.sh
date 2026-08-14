@@ -7,4 +7,4 @@ DIR="${1:-/home}"
 echo "Finding files larger than $SIZE in $DIR ..."
 echo "============================================"
 
-find "$DIR" -type f -size +$SIZE -exec du -h {} \; | sort -hr | head -20
+find "$DIR" -type f -size "+$SIZE" -exec du -h {} \; | sort -hr | head -20
