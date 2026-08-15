@@ -1,22 +1,58 @@
-# Day 4: Error Handling, Debugging, Traps, Signals, Logging
+# Day 4 — Error Handling, Debugging, Traps, Signals, Logging
 
-> Goal: Scripts that never crash, always log, and always are debuggable.
+Today's goal: scripts that never crash silently, always log what happened, and are
+easy to debug when something does go wrong.
 
-## 1. Best Bash settings (always at the beginning of the script)
+---
+
+## 📁 Scripts for today
+
+All 6 live in `scripts/advanced/day4/`.
+
+| # | Script | Path | What it does |
+|---|---|---|---|
+| 1 | Robust Backup | `robust-backup.sh` | Backs up `/home`, with a lock file to prevent overlapping runs and a rollback symlink to the last good backup |
+| 2 | Deploy with Rollback | `deploy-with-rollback.sh` | Zero-downtime deploy via symlink swap — auto-rolls-back if anything fails partway through |
+| 3 | Health Check Monitor | `health-check-monitor.sh` | ⚠️ Runs forever by default — checks a service every 30s, emails an alert if it's down. Use `--once` to test without waiting |
+| 4 | Secure Config Loader | `secure-config-loader.sh` | Validates a YAML config exists and parses before trusting any value from it |
+| 5 | Cleanup with Lock | `cleanup-with-lock.sh` | Deletes old temp files, using `mkdir` as an atomic lock to prevent two copies running at once |
+| 6 | Database Backup & Restore | `database-backup-restore.sh` | Dumps a Postgres DB, verifies the backup isn't corrupted before trusting it, symlinks `-latest` |
+
+> ⚠️ **Script #3 defaults to running forever, as a daemon.** Run it plain and it'll
+> look "stuck" until you `Ctrl+C` it — that's intentional, not a bug. Use
+> `./health-check-monitor.sh --once` to test it and get an immediate result instead.
+> For real background use, see Section 7 for `nohup`/systemd options.
+
+---
+
+## 1. The settings every script here starts with
+
 ```bash
 #!/bin/bash
-set -euo pipefail # error → exit, undefined variable → error, pipe fail → error
-IFS=$'\n\t' # prevent incorrect word splitting
+set -euo pipefail   # exit on error, exit on unset variable, catch pipe failures
+IFS=$'\n\t'         # prevents Bash from word-splitting on spaces unexpectedly
 ```
-## 2. Trap
-| Signal | Code | Usage|
-|---|--------|---------|
-| EXIT | 0 | always executes |
-| ERR | - | executes on every error |
-| INT | 2 | CTRL + C |
-| TERM | 15 | KILL |
+
+---
+
+## 2. Trap — running code when your script exits
+
+| Signal | Number | Fires when |
+|---|---|---|
+| `EXIT` | 0 | Always — success, failure, or `Ctrl+C`. The one you'll use most, for cleanup. |
+| `ERR` | – | Any command fails (with `set -e` active) |
+| `INT` | 2 | Someone hits `Ctrl+C` |
+| `TERM` | 15 | Someone/something sends a kill signal |
+
+```bash
+trap cleanup EXIT
+trap 'log "ERROR" "Failed at line $LINENO"; exit 1' ERR
+```
+
+---
 
 ## 3. Logging
+
 ```bash
 log() {
   local level="$1"
@@ -26,35 +62,143 @@ log() {
 
 log "INFO" "Starting Script"
 ```
-## 4. Debugging
+
+> The 6 scripts below each write their own simpler version of this — some hardcode
+> a fixed tag like `[DEPLOY]` instead of a dynamic level. Both are valid patterns;
+> just don't expect every script to match this exact function.
+
+---
+
+## 4. Debugging — actual commands, not pseudo-code
+
+| Command | What it does |
+|---|---|
+| `set -x` | Print every command before it runs |
+| `set +x` | Turn that back off |
+| `bash -x script.sh` | Run a whole script with debug tracing on, without editing it |
+| `BASH_XTRACEFD=2` | Send that debug trace to stderr instead of stdout, so it doesn't mix with real output |
+
+---
+
+## 5. Robust Backup
+
+**File:** `scripts/advanced/day4/robust-backup.sh`
+- Lock file at `/tmp/robust-backup.lock` — refuses to run if one already exists (prevents two backups running at once)
+- `trap cleanup EXIT` removes the lock no matter how the script ends
+- After a successful backup, symlinks `/backup/last-successful` → the new backup — an easy, always-current rollback target
 ```bash
-set -x → display each command before execution
-set +x → turn off
-bash -x script.sh → run with debug
-BASH_XTRACEFD=2 → debug to stderr
+if [[ -f "$LOCK" ]]; then
+  log "ERROR" "Script is already running (lock file exists)"
+  exit 1
+fi
+touch "$LOCK"
+rsync -av --delete "$SRC/" "$DEST/"
 ```
 
-## 5. Real Projects (Production-Ready) 
+---
 
-| # | Script | Features|
-|---|--------|---------|
-| 1 | `robust-backup.sh` | lock + trap + rollback link |
-| 2 | `deploy-with-rollback.sh` | zero-downtime + auto rollback |
-| 3 | `health-check-monitor.sh` | alert + loop + logging |
-| 4 | `secure-config-loader.sh` | validation + yq + safe defaults |
-| 5 | `cleanup-with-lock.sh` | mkdir lock + prevent race |
-| 6 | `database-backup-restore.sh` | verify + latest symlink |
+## 6. Deploy with Rollback
 
-## Day 4 Summary: Error Handling, Debugging, Traps, Signals, Logging
+**File:** `scripts/advanced/day4/deploy-with-rollback.sh`
+- Deploys into a fresh timestamped release folder, then switches a `current` symlink to point at it
+- An `EXIT` trap automatically rolls back to the previous release **unless** the deploy succeeds — the last line disarms that trap on success:
+```bash
+log "SUCCESS" "Deployment successful: $RELEASE_DIR"
+trap - EXIT  # cancel automatic rollback — we succeeded, don't undo it
+```
 
-> Goal: Unbreakable scripts with logging & debug.
+---
 
-- __Settings__: `#!/bin/bash`; `set -euo pipefail` (err handling); `IFS=$'\n\t'` (safe splitting).
+## 7. Health Check Monitor
 
-- __Trap__: Signals: EXIT (0, always), ERR (on err), INT (2, Ctrl+C), TERM (15, kill). For cleanup.
+**File:** `scripts/advanced/day4/health-check-monitor.sh`
 
-- __Logging__: log func with level, timestamp, tee to file (e.g., `log "INFO" "Msg"`).
+Checks `nginx` every 30 seconds, forever, and emails `$ALERT_EMAIL` if it goes down:
+```bash
+while true; do
+  check_service || true
+  sleep 30
+done
+```
+The `|| true` matters here — without it, one failed check under `set -e` would kill
+the entire monitor instead of just logging and continuing to the next check.
 
-- __Debugging__: `set -x` (trace on), `+x` (off); `bash -x script.sh`; `BASH_XTRACEFD=2` (to stderr).
+**Testing it without waiting or backgrounding anything:**
+```bash
+./health-check-monitor.sh --once
+```
 
-- __Projects__: Production scripts like robust-backup.sh (lock+trap+rollback), deploy-with-rollback.sh (zero-downtime+rollback), health-check-monitor.sh (alert+loop+log), secure-config-loader.sh (validate+yq+defaults), cleanup-with-lock.sh (lock anti-race), database-backup-restore.sh (verify+symlink).
+**Running it for real, as an actual background monitor:**
+```bash
+nohup ./health-check-monitor.sh > /dev/null 2>&1 &
+```
+
+> The log function prints to your terminal *and* tries to write `/var/log/health-check.log`
+> — if that file isn't writable (needs root), you'll see a visible warning instead of
+> the script going completely silent. On startup it also announces itself, so you
+> always know it's actually running before it drops into the 30-second loop.
+
+---
+
+## 8. Secure Config Loader
+
+**File:** `scripts/advanced/day4/secure-config-loader.sh`
+
+Never trusts a config file blindly — checks the parser (`yq`) exists, then checks the
+file actually parses, *before* reading any real value out of it:
+```bash
+validate_config() {
+  command -v yq &> /dev/null || { log "ERROR" "yq is not installed"; exit 1; }
+  yq eval '.database.host' "$CONFIG" > /dev/null 2>&1 || { log "ERROR" "config file invalid"; exit 1; }
+}
+```
+
+---
+
+## 9. Cleanup with Lock
+
+**File:** `scripts/advanced/day4/cleanup-with-lock.sh`
+
+Uses `mkdir` instead of a plain lock *file* — `mkdir` is atomic in a way `touch` isn't,
+so two copies of this script racing to start at the same instant can't both succeed:
+```bash
+acquire_lock() {
+  if ! mkdir "$LOCK" 2>/dev/null; then
+    echo "ERROR: Script is already running" >&2
+    exit 1
+  fi
+}
+```
+
+---
+
+## 10. Database Backup & Restore
+
+**File:** `scripts/advanced/day4/database-backup-restore.sh`
+
+Doesn't just trust that `pg_dump` succeeded — actually verifies the backup by reading
+it back before pointing the `-latest` symlink at it:
+```bash
+pg_dump -U "$USER" "$DB" | gzip > "$BACKUP_FILE"
+
+if zcat "$BACKUP_FILE" | head -10 >/dev/null; then
+  ln -sf "$BACKUP_FILE" "$BACKUP_DIR/${DB}-latest.sql.gz"
+else
+  log "ERROR" "Backup is corrupted"
+  rm -f "$BACKUP_FILE"
+  exit 1
+fi
+```
+
+---
+
+## Recap
+
+| Concept | One-liner |
+|---|---|
+| Settings | `set -euo pipefail` + `IFS=$'\n\t'` at the top of every serious script |
+| Trap | `trap cmd EXIT` for cleanup, `trap cmd ERR` to react to failures, both fire automatically |
+| Logging | Timestamp + level + message, piped through `tee -a` so it prints *and* saves |
+| Debugging | `set -x` / `bash -x script.sh` to see every command as it runs |
+
+Next up: **Day 5 — Arrays, JSON Processing, Parallel Execution, API Integration.**

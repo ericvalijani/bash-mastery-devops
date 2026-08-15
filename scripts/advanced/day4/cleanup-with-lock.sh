@@ -16,6 +16,6 @@ trap release_lock EXIT
 acquire_lock
 
 echo "Deleting files older than $MAX_AGE days..."
-find /tmp -type f -name "*.tmp" -mtime +$MAX_AGE -print -delete
+find /tmp -type f -name "*.tmp" -mtime "+$MAX_AGE" -print -delete
 
 echo "Cleanup completed"

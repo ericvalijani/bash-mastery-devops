@@ -17,7 +17,10 @@ mkdir -p "$RELEASE_DIR"
 cp -r /tmp/new-release/* "$RELEASE_DIR/"
 
 # backup current
-[[ -d "$CURRENT" ]] && cp -r "$CURRENT" "$BACKUP/"
+if [[ -d "$CURRENT" ]]; then
+  mkdir -p "$BACKUP"
+  cp -r "$CURRENT" "$BACKUP/"
+fi
 
 # switch
 rm -f "$CURRENT"

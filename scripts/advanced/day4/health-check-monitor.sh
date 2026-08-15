@@ -5,7 +5,12 @@ SERVICE="nginx"
 ALERT_EMAIL="admin@example.com"
 LOG="/var/log/health-check.log"
 
-log() { echo "[$(date +'%Y-%m-%d %H:%M:%S')] $*" >> "$LOG"; }
+log() {
+  local msg
+  msg="[$(date +'%Y-%m-%d %H:%M:%S')] $*"
+  echo "$msg"
+  echo "$msg" >> "$LOG" 2>/dev/null || echo "(warning: couldn't write to $LOG — check permissions)"
+}
 
 check_service() {
   if systemctl is-active --quiet "$SERVICE"; then
@@ -13,13 +18,23 @@ check_service() {
     return 0
   else
     log "CRITICAL: $SERVICE is stopped!"
-    echo "$SERVICE down on $(hostname) at $(date)" | mail -s "ALERT: $SERVICE DOWN" "$ALERT_EMAIL"
+    if command -v mail &> /dev/null; then
+      echo "$SERVICE down on $(hostname) at $(date)" | mail -s "ALERT: $SERVICE DOWN" "$ALERT_EMAIL"
+    else
+      log "WARNING: 'mail' not installed — alert email NOT sent"
+    fi
     return 1
   fi
 }
 
 trap 'log "INFO" "Monitoring ended"' EXIT
 
+if [[ "${1:-}" == "--once" ]]; then
+  check_service || true
+  exit 0
+fi
+
+log "INFO" "Monitoring started — checking $SERVICE every 30s (Ctrl+C to stop)"
 while true; do
   check_service || true
   sleep 30
