@@ -51,18 +51,26 @@ All 6 live in `scripts/advanced/day3/`.
 ## 3. Log Analyzer
 
 **File:** `scripts/advanced/day3/log-analyzer.sh`
+
+Works across distro families instead of assuming one specific layout — tries
+Debian/Ubuntu's log paths first, falls back to RedHat's, and falls back to
+`journalctl` if neither file exists on disk at all (common on newer
+journald-only systems):
 ```bash
-LOG_DIR="/var/log"
-REPORT="log-report-$(date +%Y%m%d).txt"
+AUTH_LOG=""
+for candidate in /var/log/auth.log /var/log/secure; do
+  [[ -r "$candidate" ]] && { AUTH_LOG="$candidate"; break; }
+done
 
-grep "Failed password" "$LOG_DIR/auth.log" 2>/dev/null | tail -10 >> "$REPORT" \
-  || echo "No auth.log found" >> "$REPORT"
-
-grep -iE "(error|fail|warning|critical)" "$LOG_DIR/syslog" 2>/dev/null \
-  | cut -d' ' -f5- | sort | uniq -c | sort -nr | head -10 >> "$REPORT" || true
+if [[ -n "$AUTH_LOG" ]]; then
+  grep "Failed password" "$AUTH_LOG" | tail -10 >> "$REPORT"
+elif command -v journalctl &> /dev/null; then
+  journalctl -u ssh -n 10 --no-pager | grep "Failed password" >> "$REPORT"
+fi
 ```
-Gracefully degrades if `auth.log`/`syslog` don't exist at those exact paths (common on
-non-Debian systems) — it notes that in the report instead of crashing.
+Same pattern repeats for the system log (`syslog` → `messages` → `journalctl`).
+If a source really isn't available, the report says so plainly instead of a
+misleading "not found" that could actually mean "not readable."
 
 ---
 
@@ -88,6 +96,11 @@ fi
 Always run with `--dry-run` first to see what *would* be deleted before actually
 deleting anything.
 
+> `BACKUP_DIR` is an absolute path (`/backup/daily`) on purpose — a destructive,
+> file-deleting script depending on the caller's current directory is a real risk:
+> if run from somewhere with its own unrelated `backup/daily` subfolder, a relative
+> path could silently delete files in the wrong place with no error at all.
+
 ---
 
 ## 5. User Report
@@ -95,9 +108,25 @@ deleting anything.
 **File:** `scripts/advanced/day3/user-report.sh`
 ```bash
 grep "/bin/bash" /etc/passwd | awk -F: '{print $1, $6}' | column -t
-journalctl _COMM=sshd | tail -20
+
+if command -v journalctl &> /dev/null; then
+  journalctl _COMM=sshd 2>/dev/null | tail -20
+elif command -v lastlog &> /dev/null; then
+  lastlog -u 1000-60000 | tail -20
+else
+  echo "No login-history tool available on this system"
+fi
 ```
 `awk -F:` splits `/etc/passwd` on `:`, `$1` is the username, `$6` is the home directory.
+`lastlog` has been removed on newer distros — confirmed missing on Ubuntu 26.04, and
+`last -R` (the usual drop-in replacement) also came up empty there. `journalctl _COMM=sshd`
+was the one that actually worked, so it's the primary path now, with `lastlog` kept as a
+fallback for older systems that still have it.
+
+> Note: `journalctl _COMM=sshd` only shows SSH-related login activity — narrower than
+> what `lastlog`/`last` traditionally report (which includes local console logins too).
+> Close enough for most servers (which are usually accessed over SSH anyway), but worth
+> knowing if you're checking a machine with real local/console logins too.
 
 ---
 
@@ -105,8 +134,9 @@ journalctl _COMM=sshd | tail -20
 
 **File:** `scripts/advanced/day3/find-large-files.sh`
 ```bash
+SIZE="100M"
 DIR="${1:-/home}"
-find "$DIR" -type f -size "+100M" -exec du -h {} \; | sort -hr | head -20
+find "$DIR" -type f -size "+$SIZE" -exec du -h {} \; | sort -hr | head -20
 ```
 Defaults to scanning `/home` if you don't pass a directory.
 

@@ -9,17 +9,26 @@ BACKUP="$APP_DIR/backup"
 log() { echo "[$(date +'%Y-%m-%d %H:%M:%S')] [DEPLOY] $*" | tee -a /var/log/deploy.log; }
 
 trap 'log "ERROR" "Deployment failed at line $LINENO"; exit 1' ERR
-trap 'log "INFO" "Rollback to previous version performed"; rm -rf "$RELEASE_DIR"; ln -sf "$BACKUP" "$CURRENT" 2>/dev/null || true' EXIT
+trap '
+  if [[ -d "$BACKUP" ]]; then
+    log "INFO" "Rolling back to previous release"
+    ln -sf "$BACKUP" "$CURRENT"
+  else
+    log "INFO" "No previous release to roll back to"
+  fi
+  rm -rf "$RELEASE_DIR"
+' EXIT
 
 log "INFO" "Starting deployment"
 
 mkdir -p "$RELEASE_DIR"
-cp -r /tmp/new-release/* "$RELEASE_DIR/"
+cp -r /tmp/new-release/. "$RELEASE_DIR/"
 
 # backup current
 if [[ -d "$CURRENT" ]]; then
+  rm -rf "$BACKUP"
   mkdir -p "$BACKUP"
-  cp -r "$CURRENT" "$BACKUP/"
+  cp -r "$CURRENT/." "$BACKUP/"
 fi
 
 # switch

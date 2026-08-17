@@ -1,117 +1,249 @@
-# Day 5: Arrays, Associative Arrays, JSON Processing, Parallel Execution & Real-World API Integration
+# Day 5 — Arrays, JSON Processing, Parallel Execution & API Integration
 
-> **Goal**: Write Bash scripts that process **10,000 lines of JSON in seconds**, run **100 tasks in parallel**, and interact with **real production APIs** — exactly what Senior DevOps Engineers do daily at FAANG companies.
+Today's goal: work with structured data (arrays, JSON), run many tasks at once
+instead of one-by-one, and talk to real APIs — the pattern behind most real
+DevOps tooling.
 
-## 1. Array Types in Bash
+---
 
+## 📁 Scripts for today
 
-### Indexed Array (classic)
+All 7 live in `scripts/advanced/day5/`.
+
+| # | Script | Real-world use case |
+|---|---|---|
+| 1 | `k8s-pod-cleaner.sh` | Deletes failed/evicted pods across namespaces, in parallel, with a working `--dry-run` mode |
+| 2 | `github-repo-backup.sh` | Mirrors every repo in your GitHub account, with bounded parallelism to respect API rate limits |
+| 3 | `docker-image-pruner.sh` | Removes Docker images older than N days, with a working `--dry-run` mode |
+| 4 | `multi-host-pinger.sh` | Pings a list of hosts in parallel, reports which are up/down |
+| 5 | `json-log-parser.sh` | Parses a large JSON log file in a single pass: error count, warning count, top 5 IPs |
+| 6 | `config-validator.sh` | Validates every YAML/JSON config file in a directory, in parallel |
+| 7 | `cloud-cost-analyzer.sh` | Pulls 7-day AWS cost data per service and correctly sums it into one report |
+
+> **A note on honesty:** an earlier version of this doc described these as
+> "All Tested, Zero Bugs, FAANG-Level." Going through them properly, several had
+> real bugs — a broken date check that misjudged image age, a cost report that
+> silently overwrote data instead of summing it, and unbounded parallelism against
+> a rate-limited API. All of that is fixed now (see each section below), but the
+> framing was wrong before, so it's worth saying plainly rather than repeating it.
+
+---
+
+## 1. Array types
+
+**Indexed array** (the classic kind):
 ```bash
 fruits=("apple" "banana" "cherry")
 echo "First fruit: ${fruits[0]}"
 ```
-### Associative Array (Bash 4.0+)
+
+**Associative array** (Bash 4.0+, key-value pairs):
 ```bash
 declare -A config
 config[db_host]="prod-db.example.com"
 config[db_port]="5432"
-config[environment]="production"
+printf "DB: %s:%s\n" "${config[db_host]}" "${config[db_port]}"
+```
 
-printf "DB: %s:%s (%s)\n" "${config[db_host]}" "${config[db_port]}" "${config[environment]}"
-Sample output: DB: prod-db.example.com:5432 (production)
-```
-## 2. JSON Handling with Industry Standard: jq
-### Install: sudo apt install jq -y
+---
+
+## 2. JSON with `jq`
+
+Install: `sudo apt install jq -y`
 ```bash
-echo '{"name":"Ali","role":"DevOps","level":"Senior"}' | jq '.name'
+echo '{"name":"Ali","role":"DevOps"}' | jq '.name'
 ```
-### Real API example
+
+**Real API example:**
 ```bash
 curl -s https://api.github.com/repos/torvalds/linux | jq '.stargazers_count'
 ```
-## 3. Parallel Execution (The Secret of Speed)
-### Run 10 background jobs
+
+---
+
+## 3. Parallel execution
+
+**Simple background jobs:**
 ```bash
 for i in {1..10}; do
   sleep 1 &
 done
-wait  # Wait for all to finish
+wait  # wait for all of them to finish
 ```
-### Pro tip: Use xargs -P for massive parallelism
+
+**Bounded parallelism with `xargs -P`** — this is the safer pattern used in
+today's scripts, since it caps how many run at once instead of firing them
+all unbounded:
 ```bash
-seq 1000 | xargs -n1 -P200 ping -c1
+seq 1000 | xargs -n1 -P50 -I{} ping -c1 {}
 ```
-## 4. Performance Best Practices (Senior-Level Tips)
-Why It Matters
+
+---
+
+## 4. Performance habits worth building now
+
+| Do this | Instead of this | Why |
+|---|---|---|
+| `mapfile -t arr < file` | `while read` loop | Much faster for large files |
+| `printf` | `echo` | Predictable, no surprises with special characters |
+| `[[ ]]` | `[ ]` | Safer, doesn't need quoting to avoid word-splitting |
+| `local` inside functions | bare variables | Prevents leaking into the rest of the script |
+
+---
+
+## 5. k8s-pod-cleaner.sh
+
+**File:** `scripts/advanced/day5/k8s-pod-cleaner.sh`
+
+Checks `kubectl`/`jq` exist first, logs everything, and correctly identifies
+failed/crashed/image-pull-error pods across namespaces without false-flagging
+healthy ones:
 ```bash
-mapfile -t array < file: 10x faster than while read
-read -r: Prevents backslash escaping
-printf > echo: "Predictable, portable, no surprises"
-[[ ]] > [ ]: "Faster, safer string tests"
-local in functions: Prevents variable leaks
+./k8s-pod-cleaner.sh --dry-run          # preview only, recommended first
+MAX_PARALLEL=20 ./k8s-pod-cleaner.sh    # real cleanup, more parallel jobs
 ```
-## Seven Production-Grade Projects (All Tested, Zero Bugs, FAANG-Level)
 
-| # | Script | Real-World Use Case | Performance |
-|---|------|---------------------|-------------|
-| 1 | `k8s-pod-cleaner.sh` | Auto-delete crashed/evicted pods across namespaces | "1,000 pods in < 5s" |
-| 2 | `github-repo-backup.sh` | Mirror all repos from an organization (GitHub Enterprise ready) | 200+ repos in parallel |
-| 3 | `docker-image-pruner.sh` | Remove old & dangling images older than 30 days | "10,000+ images safely" |
-| 4 | `multi-host-pinger.sh` | "Ping 1,000+ servers simultaneously" | "1,000 hosts in ~2s" |
-| 5 | `json-log-parser.sh` | Parse 1M+ structured JSON logs in seconds | mapfile + jq pipeline |
-| 6 | `config-validator.sh` | "Validate 1,000+ YAML/JSON config files in parallel" | xargs -P50 + yq |
-| 7 | `cloud-cost-analyzer.sh` | Fetch & aggregate 7-day AWS cost per service | AWS CE API + jq + parallel
+---
 
-## Features Included in All Scripts:
+## 6. github-repo-backup.sh
+
+**File:** `scripts/advanced/day5/github-repo-backup.sh`
+
+Mirrors every repo you have access to, with concurrency capped at `MAX_PARALLEL=10`
+instead of launching every clone at once — GitHub's API will rate-limit or reject
+a burst of 100+ simultaneous authenticated requests:
 ```bash
-set -euo pipefail
-Proper trap for cleanup and rollback
-Lock files to prevent race conditions
-Structured logging with timestamps
-Rate limiting & retry logic (where applicable)
-Zero external dependencies beyond standard tools (jq, yq, kubectl, docker, aws, curl)
+ORG="ericvalijani"     # your actual GitHub username instead of "kubernetes"
+TOKEN="ghp_yourtoken"  # a real PAT from github.com/settings/tokens
 ```
-## Example Output (multi-host-pinger.sh):
+Uses `/user/repos` (the authenticated-user endpoint) rather than `/orgs/$ORG/repos`
+— the latter only works for real GitHub Organizations, not personal accounts.
+
 ```bash
-UP: google.com
-UP: 8.8.8.8
-DOWN: invalid-host-123.local
-UP: github.com
-...
-Completed: 1000 hosts in 1.87 seconds
+DRY_RUN=true ./github-repo-backup.sh   # preview only, skips the actual git clone
+./github-repo-backup.sh                # real backup
 ```
-## How to use k8s-cleaner:
-### 1. Test run (RECOMMENDED FIRST)
+
+---
+
+## 7. docker-image-pruner.sh
+
+**File:** `scripts/advanced/day5/docker-image-pruner.sh`
+
+Removes images older than `MAX_DAYS` (default 30). Now reads `.Created`
+(always present on every image) instead of `.Metadata.LastTagTime` (usually
+missing, which was silently making every image look decades old):
 ```bash
-DRY_RUN=true ./k8s-cleaner.sh
+DRY_RUN=true ./docker-image-pruner.sh   # preview only, recommended first
+./docker-image-pruner.sh                # actually removes images
 ```
-### 2. Real cleanup with more parallel jobs
+
+---
+
+## 8. multi-host-pinger.sh
+
+**File:** `scripts/advanced/day5/multi-host-pinger.sh`
+
 ```bash
-MAX_PARALLEL=20 ./k8s-cleaner.sh
+./multi-host-pinger.sh /path/to/hosts.txt
 ```
-### 3. Only specific namespaces
+Now checks the hosts file actually exists before starting, instead of failing
+confusingly deep inside `xargs`.
+
+---
+
+## 9. json-log-parser.sh
+
+**File:** `scripts/advanced/day5/json-log-parser.sh`
+
+Reads the last 100,000 lines of a JSON log and reports error count, warning
+count, and the top 5 IPs — in a single `jq` pass instead of three separate
+ones over the same data:
 ```bash
-NAMESPACES=("default" "staging" "prod") ./k8s-cleaner.sh
+jq -s '
+  {
+    errors: ([.[] | select(.level=="ERROR")] | length),
+    warnings: ([.[] | select(.level=="WARN")] | length),
+    top_5_ips: ([.[].ip] | group_by(.) | map({ip: .[0], count: length}) | sort_by(-.count) | .[0:5])
+  }'
 ```
-### 4. Add to crontab (every 15 minutes)
+
+---
+
+## 10. config-validator.sh
+
+**File:** `scripts/advanced/day5/config-validator.sh`
+
 ```bash
-*/15 * * * * /path/to/k8s-cleaner.sh >/dev/null 2>&1
+./config-validator.sh
+```
+Validates every `.yaml`/`.yml` file in a directory in parallel with `xargs -P50`,
+reporting `OK` or `INVALID` per file.
+
+---
+
+## 11. cloud-cost-analyzer.sh
+
+**File:** `scripts/advanced/day5/cloud-cost-analyzer.sh`
+
+Pulls 7-day AWS cost data for 4 services in parallel, then **correctly sums**
+cost per service across all days. The original version used `jq -s 'add'`,
+which shallow-merges whole response objects rather than actually summing
+anything — meaning 3 of the 4 services' data would silently vanish, overwritten
+by the last one processed. Fixed:
+```bash
+jq -s '
+  [.[] | .ResultsByTime[]?.Groups[]? | {service: .Keys[0], cost: (.Metrics.UnblendedCost.Amount | tonumber)}]
+  | group_by(.service)
+  | map({service: .[0].service, total_cost: (map(.cost) | add)})
+'
 ```
 
-## Day 5 Summary: Arrays, Assoc Arrays, JSON, Parallel & API Integration
+**Testing it locally** — the script needs a real AWS account with Cost Explorer
+access, which most people don't have lying around. Instead of skipping it, mock
+the `aws` command itself with a fake one that returns realistic Cost Explorer
+JSON, and put it first in `PATH` so the script finds it instead of the real thing:
+```bash
+mkdir -p /tmp/aws-mock
+cat > /tmp/aws-mock/aws << 'EOF'
+#!/bin/bash
+# mock aws ce get-cost-and-usage
+cat << 'JSON'
+{
+  "ResultsByTime": [{
+    "TimePeriod": {"Start": "2026-08-01", "End": "2026-08-08"},
+    "Groups": [{
+      "Keys": ["Amazon EC2"],
+      "Metrics": {"UnblendedCost": {"Amount": "42.50", "Unit": "USD"}}
+    }]
+  }]
+}
+JSON
+EOF
+chmod +x /tmp/aws-mock/aws
+export PATH="/tmp/aws-mock:$PATH"
 
-> Goal: Fast JSON processing (10k lines/sec), parallel tasks (100+), prod APIs for FAANG DevOps.
+bash cloud-cost-analyzer.sh
+```
+The script queries 4 services in parallel (`AmazonEC2`, `AmazonS3`, `AWSLambda`,
+`AmazonRDS`), and since this mock always returns the same $42.50 no matter which
+service is asked, the correct aggregated report should show a single combined
+entry: `42.50 × 4 = 170`. That's exactly what a real run produces —
+`[{"service": "Amazon EC2", "total_cost": 170}]` — confirming the `jq` grouping
+and summing logic is working correctly, not just producing a plausible-looking
+number by coincidence. Clean up afterward with `rm -rf /tmp/aws-mock`, and note
+the real script will show 4 separate services once pointed at real AWS data,
+not just one — this mock happens to return identical data for all of them.
 
-- __Arrays__: Indexed (`("apple" ...`); `${arr[0]}`); Assoc (`-A`; key-val like `[key]=val`).
+---
 
-- __JSON w/ jq__: Parse (`jq '.field'`); API (curl GitHub | jq).
+## Recap
 
-- __Parallel__: Background (`&` + `wait`); xargs -P (e.g., ping 1k parallel).
+| Concept | One-liner |
+|---|---|
+| Arrays | `arr=(a b c)` indexed, `declare -A arr` for key-value |
+| JSON | `jq '.field'` to extract, `jq -s '...'` to combine multiple files |
+| Parallel | `cmd &` + `wait` for simple cases, `xargs -P N` when you need a concurrency *limit* |
+| Safety | Always add a `--dry-run`/`DRY_RUN=true` path before anything destructive runs for real |
 
-- __Perf Tips__: mapfile > while; read -r; printf > echo; [[ ]] > [ ]; local vars.
-
-- __Projects__: k8s-pod-cleaner (delete 1k pods <5s), github-repo-backup (200+ parallel), docker-image-pruner (10k+ images), multi-host-pinger (1k ~2s), json-log-parser (1M+ logs), config-validator (1k+ YAML/JSON parallel), cloud-cost-analyzer (AWS costs API+jq+parallel).
-
-Features: `set -euo pipefail`, traps, locks, logging, rate/retry, std tools (jq/yq/kubectl/docker/aws/curl).
-
-Usage: Dry runs, env vars (e.g., MAX_PARALLEL), crontab.
+Next up: **Day 6 — Modular Libraries, BATS Unit Testing, Code Coverage, Pre-commit.**

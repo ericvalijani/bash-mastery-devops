@@ -12,8 +12,8 @@ acquire_lock() {
 }
 release_lock() { rmdir "$LOCK"; }
 
-trap release_lock EXIT
 acquire_lock
+trap release_lock EXIT
 
 echo "Deleting files older than $MAX_AGE days..."
 find /tmp -type f -name "*.tmp" -mtime "+$MAX_AGE" -print -delete

@@ -1,7 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 
-BACKUP_DIR="./backup/daily"
+BACKUP_DIR="/backup/daily"
 DAYS=30
 DRY_RUN=false
 

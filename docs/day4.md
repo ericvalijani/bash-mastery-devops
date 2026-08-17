@@ -92,6 +92,8 @@ if [[ -f "$LOCK" ]]; then
   exit 1
 fi
 touch "$LOCK"
+trap cleanup EXIT
+
 rsync -av --delete "$SRC/" "$DEST/"
 ```
 
@@ -105,6 +107,46 @@ rsync -av --delete "$SRC/" "$DEST/"
 ```bash
 log "SUCCESS" "Deployment successful: $RELEASE_DIR"
 trap - EXIT  # cancel automatic rollback — we succeeded, don't undo it
+```
+
+Before deploying, it snapshots the current release into `$BACKUP` (clearing out
+anything left over from an older snapshot first, so it always reflects exactly
+the one release right before this deploy — not a stale mix of several past ones):
+```bash
+if [[ -d "$CURRENT" ]]; then
+  rm -rf "$BACKUP"
+  mkdir -p "$BACKUP"
+  cp -r "$CURRENT/." "$BACKUP/"
+fi
+```
+
+If a deploy fails, the rollback trap checks whether a real backup actually exists
+before restoring it — on a script's very first-ever run there's nothing to roll
+back to yet, so it says that plainly instead of pointing `$CURRENT` at an empty
+directory:
+```bash
+if [[ -d "$BACKUP" ]]; then
+  ln -sf "$BACKUP" "$CURRENT"
+else
+  log "INFO" "No previous release to roll back to"
+fi
+```
+
+**Testing it locally** — the script expects a real release to deploy from
+`/tmp/new-release/` into `/var/www/myapp/`, neither of which exist by default:
+```bash
+mkdir -p /tmp/new-release
+echo "<h1>hello world</h1>" > /tmp/new-release/index.html
+
+sudo mkdir -p /var/www/myapp
+sudo bash deploy-with-rollback.sh
+```
+Expect `[SUCCESS] Deployment successful: /var/www/myapp/releases/<timestamp>`.
+Check `/var/www/myapp/current` afterward — it'll be a symlink pointing at that
+release. Clean up:
+```bash
+sudo rm -rf /var/www/myapp /var/log/deploy.log
+rm -rf /tmp/new-release
 ```
 
 ---
@@ -153,6 +195,22 @@ validate_config() {
 }
 ```
 
+**Testing it locally** — the script expects a real file at `/etc/myapp/config.yaml`,
+which doesn't exist by default. Create a fake one to see it succeed instead of
+erroring out:
+```bash
+sudo mkdir -p /etc/myapp
+echo "database:" | sudo tee /etc/myapp/config.yaml > /dev/null
+echo "  host: localhost" | sudo tee -a /etc/myapp/config.yaml > /dev/null
+echo "  port: 5432" | sudo tee -a /etc/myapp/config.yaml > /dev/null
+
+bash secure-config-loader.sh
+```
+Expect `[SUCCESS] config loaded successfully`. Clean up afterward:
+```bash
+sudo rm -rf /etc/myapp
+```
+
 ---
 
 ## 9. Cleanup with Lock
@@ -168,6 +226,10 @@ acquire_lock() {
     exit 1
   fi
 }
+release_lock() { rmdir "$LOCK"; }
+
+acquire_lock
+trap release_lock EXIT
 ```
 
 ---
@@ -179,7 +241,9 @@ acquire_lock() {
 Doesn't just trust that `pg_dump` succeeded — actually verifies the backup by reading
 it back before pointing the `-latest` symlink at it:
 ```bash
-pg_dump -U "$USER" "$DB" | gzip > "$BACKUP_FILE"
+command -v pg_dump &> /dev/null || { log "ERROR" "pg_dump is not installed"; exit 1; }
+
+pg_dump -U "$DB_USER" "$DB" | gzip > "$BACKUP_FILE"
 
 if zcat "$BACKUP_FILE" | head -10 >/dev/null; then
   ln -sf "$BACKUP_FILE" "$BACKUP_DIR/${DB}-latest.sql.gz"
@@ -189,6 +253,9 @@ else
   exit 1
 fi
 ```
+Named `DB_USER`, not `USER` — the latter would silently shadow the system's own
+built-in `$USER` environment variable, which is exactly the kind of subtle
+naming collision worth avoiding on purpose.
 
 ---
 

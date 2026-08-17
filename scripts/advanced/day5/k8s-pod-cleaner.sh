@@ -3,15 +3,12 @@ set -euo pipefail
 IFS=$'\n\t'
 
 # ==================== CONFIGURATION ====================
-# Directory for log file (defaults to /tmp if not writable elsewhere)
 LOG_DIR="${LOG_DIR:-/tmp}"
 LOG="$LOG_DIR/k8s-cleaner.log"
-
-# Maximum number of parallel namespace cleanups (safe default: 10)
 MAX_PARALLEL="${MAX_PARALLEL:-10}"
 
-# Dry-run mode: set to "true" to only show what would be deleted
-DRY_RUN="${DRY_RUN:-false}"
+# Default to false unless overridden by --dry-run argument
+DRY_RUN="false"
 
 # List of namespaces to clean. Leave empty to scan ALL namespaces.
 NAMESPACES=()
@@ -21,6 +18,16 @@ RED='\033[31m'
 GREEN='\033[32m'
 YELLOW='\033[33m'
 NC='\033[0m'  # No Color
+
+# ==================== ARGUMENT PARSING ====================
+for arg in "$@"; do
+    case $arg in
+        --dry-run)
+            DRY_RUN="true"
+            shift
+            ;;
+    esac
+done
 
 # ==================== HELPER FUNCTIONS ====================
 log() {
@@ -67,11 +74,17 @@ clean_namespace() {
     local ns="$1"
     log "INFO" "Scanning namespace: $ns"
 
+    # Fixed version: uses select(. != null) to bypass blank fields on healthy pods
     local failed_pods
-    failed_pods=$(kubectl get pods -n "$ns" \
-        --field-selector=status.phase=Failed \
-        -o json 2>/dev/null \
-        | jq -r '.items[]?.metadata.name // empty' || true)
+    failed_pods=$(kubectl get pods -n "$ns" -o json 2>/dev/null | jq -r '
+        .items[]? | 
+        select(
+            (.status.phase == "Failed") or 
+            (
+                .status.containerStatuses != null and 
+                (.status.containerStatuses[]?.state.waiting.reason | select(. != null) | test("ImagePullBackOff|ErrImagePull|CrashLoopBackOff"; "i"))
+            )
+        ) | .metadata.name // empty' || true)
 
     if [[ -z "$failed_pods" ]]; then
         log "INFO" "No failed pods found in namespace '$ns'"
@@ -81,7 +94,7 @@ clean_namespace() {
     while IFS= read -r pod; do
         [[ -z "$pod" ]] && continue
 
-        log "WARN" "Found failed pod: $ns/$pod"
+        log "WARN" "Found broken/failed pod: $ns/$pod"
 
         if [[ "$DRY_RUN" == "true" ]]; then
             log "DRY-RUN" "Would run: kubectl delete pod $pod -n $ns --grace-period=0 --force"

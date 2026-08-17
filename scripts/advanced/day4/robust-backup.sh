@@ -14,7 +14,6 @@ cleanup() {
   rm -f "$LOCK"
   log "INFO" "Cleanup completed"
 }
-trap cleanup EXIT
 
 trap 'log "ERROR" "Error at line $LINENO"; exit 1' ERR
 
@@ -23,6 +22,7 @@ if [[ -f "$LOCK" ]]; then
   exit 1
 fi
 touch "$LOCK"
+trap cleanup EXIT
 
 log "INFO" "Starting backup from $SRC"
 
