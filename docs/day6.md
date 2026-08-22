@@ -6,6 +6,26 @@ prove they work with automated tests that actually run — not "looks right."
 
 ---
 
+## 📁 Scripts for today
+
+All live in `scripts/modular/`.
+
+| # | File | What it does | Try it |
+|---|---|---|---|
+| 1 | `lib/logging.sh` | Structured JSON logging — `log_info`/`log_warn`/`log_error`/`log_debug`, every line tagged with `$COMPONENT` | sourced, not run |
+| 2 | `lib/retry.sh` | Retries a command with exponential backoff (5s → 10s → 20s) | sourced, not run |
+| 3 | `lib/lock.sh` | `flock`-based mutex so two copies of a script can't run at once | sourced, not run |
+| 4 | `lib/validator.sh` | Precondition checks — fails fast with a message naming the bad variable or path | sourced, not run |
+| 5 | `modules/backup-manager.sh` | rsync snapshot backup, using all four libraries above | `SRC=/tmp/src BACKUP_DIR=/tmp/bk LOCK_FILE=/tmp/b.lock ./scripts/modular/modules/backup-manager.sh` |
+| 6 | `modules/deploy.sh` | Release-directory deploy with an atomic `current` symlink swap | `RELEASE_SRC=/tmp/rel APP_DIR=/tmp/app LOCK_FILE=/tmp/d.lock ./scripts/modular/modules/deploy.sh` |
+| 7 | `tests/*.bats` | 37 tests proving everything above actually works | `bats scripts/modular/tests/` |
+
+> **The four `lib/` files are libraries, not scripts.** They only define
+> functions, so running one directly does nothing visible — that's correct.
+> They're meant to be `source`d, which is what the two modules do.
+
+---
+
 ## 1. Layout
 
 ```
@@ -500,4 +520,4 @@ shellcheck -x -P scripts/modular/lib:scripts/modular/modules \
 bats scripts/modular/tests/
 ```
 
-Next: **Day 7 — Zero-Trust Security Pipeline.**
+Next up: **Day 7 — Zero-Trust Security Pipeline: Secret Scanning, Rotation, Pre-commit Gates.**

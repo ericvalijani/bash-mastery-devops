@@ -40,3 +40,28 @@ MODULAR_DIR="$(cd "$BATS_TEST_DIRNAME/.." && pwd)"
 export MODULAR_DIR
 export MODULES_DIR="$MODULAR_DIR/modules"
 export LIB_DIR="$MODULAR_DIR/lib"
+
+# bin_without TOOL — echo the path of a throwaway bin directory containing
+# every common utility EXCEPT TOOL, so a test can prove "behaviour when TOOL is
+# missing" on any machine.
+#
+# Two approaches that DON'T work:
+#   PATH="$FAKEBIN:/usr/bin:/bin"  — only hides TOOL on a machine that happens
+#                                    not to have it installed.
+#   stripping TOOL's directory from PATH — removes bash/date/tee along with it,
+#                                    since they live in /usr/bin too.
+#
+# So: symlink a known-good set of utilities into a temp dir, skipping TOOL.
+bin_without() {
+  local tool="$1"
+  local dir="${BATS_TEST_TMPDIR:-/tmp}/bin_without_$tool"
+  mkdir -p "$dir"
+  local c src
+  for c in bash sh env dirname basename mktemp date tee grep sed awk rm cat \
+    cp mv mkdir ln chmod find sort head tail wc curl jq; do
+    [[ "$c" == "$tool" ]] && continue
+    src="$(command -v "$c" 2>/dev/null)" || continue
+    ln -sf "$src" "$dir/$c"
+  done
+  printf '%s' "$dir"
+}
