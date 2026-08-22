@@ -6,7 +6,11 @@ RELEASE_DIR="$APP_DIR/releases/$(date +%Y%m%d%H%M%S)"
 CURRENT="$APP_DIR/current"
 BACKUP="$APP_DIR/backup"
 
-log() { echo "[$(date +'%Y-%m-%d %H:%M:%S')] [DEPLOY] $*" | tee -a /var/log/deploy.log; }
+log() {
+  local level="$1"
+  shift
+  echo "[$(date +'%Y-%m-%d %H:%M:%S')] [DEPLOY] [$level] $*" | tee -a /var/log/deploy.log
+}
 
 trap 'log "ERROR" "Deployment failed at line $LINENO"; exit 1' ERR
 trap '
@@ -36,4 +40,4 @@ rm -f "$CURRENT"
 ln -s "$RELEASE_DIR" "$CURRENT"
 
 log "SUCCESS" "Deployment successful: $RELEASE_DIR"
-trap - EXIT  # Cancel automatic rollback
+trap - EXIT # Cancel automatic rollback

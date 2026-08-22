@@ -5,8 +5,9 @@ retry() {
   local max_attempts=${1:-5}
   local delay=${2:-2}
   local attempt=1
+  shift 2
 
-  while (( attempt <= max_attempts )); do
+  while ((attempt <= max_attempts)); do
     "$@" && return 0
     log_error "Attempt $attempt failed. Retrying in ${delay}s..."
     sleep "$delay"

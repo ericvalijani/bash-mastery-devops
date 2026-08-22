@@ -20,4 +20,4 @@ done
 [[ -z "${name:-}" || -z "${age:-}" ]] && usage
 
 echo "Name: $name, Age: $age"
-(( verbose )) && echo "Verbose mode enabled"
+((verbose)) && echo "Verbose mode enabled"

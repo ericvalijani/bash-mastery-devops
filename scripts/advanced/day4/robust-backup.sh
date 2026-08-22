@@ -8,7 +8,11 @@ SRC="/home"
 DEST="/backup/home-$(date +%Y%m%d-%H%M%S)"
 ROLLBACK="/backup/last-successful"
 
-log() { echo "[$(date +'%Y-%m-%d %H:%M:%S')] $*" | tee -a "$LOG"; }
+log() {
+  local level="$1"
+  shift
+  echo "[$(date +'%Y-%m-%d %H:%M:%S')] [$level] $*" | tee -a "$LOG"
+}
 
 cleanup() {
   rm -f "$LOCK"

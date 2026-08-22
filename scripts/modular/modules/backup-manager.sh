@@ -3,16 +3,29 @@ set -euo pipefail
 IFS=$'\n\t'
 shopt -s inherit_errexit 2>/dev/null || true
 
-readonly SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+readonly SCRIPT_DIR
 source "$SCRIPT_DIR/../lib/logging.sh"
 source "$SCRIPT_DIR/../lib/retry.sh"
 source "$SCRIPT_DIR/../lib/lock.sh"
+# shellcheck source=../lib/validator.sh
+source "$SCRIPT_DIR/../lib/validator.sh"
 
-COMPONENT="backup-manager"
+# shellcheck disable=SC2034  # consumed by log_* in lib/logging.sh
+export COMPONENT="backup-manager"
+
+BACKUP_DIR="${BACKUP_DIR:-/backup/data}"
+SRC="${SRC:-/var/www}"
+
+# Fail fast, before acquiring a lock or touching the filesystem.
+require_cmd rsync
+require_var SRC BACKUP_DIR
+require_safe_path "$SRC"
+require_safe_path "$BACKUP_DIR"
+require_dir "$SRC"
+require_writable "$BACKUP_DIR"
+
 acquire_lock
-
-BACKUP_DIR="/backup/data"
-SRC="/var/www"
 
 log_info "Starting backup of $SRC"
 

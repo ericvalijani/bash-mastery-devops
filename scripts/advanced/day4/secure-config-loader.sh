@@ -3,15 +3,19 @@ set -euo pipefail
 
 CONFIG="/etc/myapp/config.yaml"
 
-log() { echo "[$(date +'%Y-%m-%d %H:%M:%S')] [CONFIG] $*"; }
+log() {
+  local level="$1"
+  shift
+  echo "[$(date +'%Y-%m-%d %H:%M:%S')] [CONFIG] [$level] $*"
+}
 
 validate_config() {
-  if ! command -v yq &> /dev/null; then
+  if ! command -v yq &>/dev/null; then
     log "ERROR" "yq is not installed"
     exit 1
   fi
 
-  if ! yq eval '.database.host' "$CONFIG" > /dev/null 2>&1; then
+  if ! yq eval '.database.host' "$CONFIG" >/dev/null 2>&1; then
     log "ERROR" "config file invalid or corrupted"
     exit 1
   fi

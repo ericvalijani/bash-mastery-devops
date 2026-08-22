@@ -4,8 +4,14 @@ set -euo pipefail
 DAYS=7
 REPORT="aws-cost-$(date +%Y%m%d).json"
 
-command -v aws &> /dev/null || { echo "ERROR: aws CLI is not installed"; exit 1; }
-command -v jq &> /dev/null || { echo "ERROR: jq is not installed"; exit 1; }
+command -v aws &>/dev/null || {
+  echo "ERROR: aws CLI is not installed"
+  exit 1
+}
+command -v jq &>/dev/null || {
+  echo "ERROR: jq is not installed"
+  exit 1
+}
 
 analyze_service() {
   local service="$1"
@@ -18,7 +24,7 @@ analyze_service() {
     --metrics "UnblendedCost" \
     --group-by Type=DIMENSION,Key=SERVICE \
     --filter "{\"Dimensions\":{\"Key\":\"SERVICE\",\"Values\":[\"$service\"]}}" \
-    --output json > "/tmp/cost-$service.json"
+    --output json >"/tmp/cost-$service.json"
 }
 export -f analyze_service
 export DAYS
@@ -38,6 +44,6 @@ jq -s '
   }]
   | group_by(.service)
   | map({service: .[0].service, total_cost: (map(.cost) | add)})
-' /tmp/cost-*.json > "$REPORT"
+' /tmp/cost-*.json >"$REPORT"
 
 echo "AWS expense report: $REPORT"

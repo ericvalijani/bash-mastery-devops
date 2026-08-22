@@ -23,7 +23,7 @@ done
 
 while IFS= read -r line; do
   echo "Line: $line"
-done < README.md
+done <README.md
 
 # Until loop
 seconds=0

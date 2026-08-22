@@ -1,14 +1,20 @@
 #!/bin/bash
 set -euo pipefail
 
-ORG="ericvalijani"     # your actual GitHub username instead of "kubernetes"
-TOKEN="ghp_yourtoken"  # a real PAT from github.com/settings/tokens
+ORG="ericvalijani"    # your actual GitHub username instead of "kubernetes"
+TOKEN="ghp_yourtoken" # a real PAT from github.com/settings/tokens
 BACKUP_DIR="/backup/github/$ORG"
-MAX_PARALLEL=10  # bounded, to stay under GitHub's API rate limit
+MAX_PARALLEL=10 # bounded, to stay under GitHub's API rate limit
 DRY_RUN="${DRY_RUN:-false}"
 
-command -v curl &> /dev/null || { echo "ERROR: curl is not installed"; exit 1; }
-command -v jq &> /dev/null || { echo "ERROR: jq is not installed"; exit 1; }
+command -v curl &>/dev/null || {
+  echo "ERROR: curl is not installed"
+  exit 1
+}
+command -v jq &>/dev/null || {
+  echo "ERROR: jq is not installed"
+  exit 1
+}
 
 backup_repo() {
   local repo="$1"

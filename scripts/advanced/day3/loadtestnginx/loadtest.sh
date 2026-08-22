@@ -4,7 +4,7 @@ set -euo pipefail
 # Simple load test on an Nginx (or any HTTP) server using Apache Bench (ab).
 # Requires 'ab': sudo apt install apache2-utils
 
-if ! command -v ab &> /dev/null; then
+if ! command -v ab &>/dev/null; then
   echo "Error: 'ab' (Apache Bench) is not installed. Install with: sudo apt install apache2-utils"
   exit 1
 fi

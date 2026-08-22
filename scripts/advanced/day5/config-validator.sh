@@ -4,7 +4,10 @@ set -euo pipefail
 CONFIG_DIR="/etc/app-configs"
 THREADS=50
 
-command -v yq &> /dev/null || { echo "ERROR: yq is not installed"; exit 1; }
+command -v yq &>/dev/null || {
+  echo "ERROR: yq is not installed"
+  exit 1
+}
 
 validate_file() {
   local file="$1"

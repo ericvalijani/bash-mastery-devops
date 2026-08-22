@@ -4,7 +4,10 @@ set -euo pipefail
 DRY_RUN="${DRY_RUN:-false}"
 MAX_DAYS="${MAX_DAYS:-30}"
 
-command -v docker &> /dev/null || { echo "ERROR: docker is not installed"; exit 1; }
+command -v docker &>/dev/null || {
+  echo "ERROR: docker is not installed"
+  exit 1
+}
 
 prune_image() {
   local img="$1"
@@ -15,9 +18,9 @@ prune_image() {
 
   local created_epoch days_old
   created_epoch=$(date -d "$created" +%s 2>/dev/null || echo 0)
-  [[ "$created_epoch" -eq 0 ]] && return  # couldn't parse date, skip rather than misjudge age
+  [[ "$created_epoch" -eq 0 ]] && return # couldn't parse date, skip rather than misjudge age
 
-  days_old=$(( ( $(date +%s) - created_epoch ) / 86400 ))
+  days_old=$((($(date +%s) - created_epoch) / 86400))
 
   if [[ $days_old -gt $MAX_DAYS ]]; then
     if [[ "$DRY_RUN" == "true" ]]; then

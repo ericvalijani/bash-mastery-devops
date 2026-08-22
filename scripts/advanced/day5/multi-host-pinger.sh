@@ -20,4 +20,4 @@ ping_host() {
 }
 
 export -f ping_host
-xargs -P "$THREADS" -I {} bash -c 'ping_host "{}"' < "$HOSTS_FILE"
+xargs -P "$THREADS" -I {} bash -c 'ping_host "{}"' <"$HOSTS_FILE"
