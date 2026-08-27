@@ -1,0 +1,15 @@
+# secrets & local config
+.env
+*.secret
+*.key
+**/config.env
+
+# logs & reports
+*.log
+log-report-*.txt
+*-report-*.txt
+*-report-*.json
+
+# artifacts
+sbom-*.json
+*.tar.gz

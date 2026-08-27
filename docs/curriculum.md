@@ -1,0 +1,58 @@
+# Curriculum — 30 Days to Principal (rebalanced)
+
+One concept per day. Every day ships a lesson (`README.md`), runnable
+script(s), and a BATS suite. Pre-commit + BATS gate every day from Day 1.
+
+## Phase 1 — Bash Foundations (1–5)
+| Day | Topic |
+|-----|-------|
+| 01 | Shell basics & variables |
+| 02 | Conditionals & test expressions |
+| 03 | Loops |
+| 04 | Functions & scope |
+| 05 | Arguments & getopts |
+
+## Phase 2 — Data, Files & Text (6–10)
+| Day | Topic |
+|-----|-------|
+| 06 | File I/O & redirection |
+| 07 | Text processing (grep/sed/awk) |
+| 08 | Arrays & associative arrays |
+| 09 | JSON & API integration |
+| 10 | Environment variables & config |
+
+## Phase 3 — Robust & Concurrent Scripting (11–15)
+| Day | Topic |
+|-----|-------|
+| 11 | Error handling, logging & debugging |
+| 12 | Process management & signals |
+| 13 | Parallel & concurrent execution |
+| 14 | Modular libraries |
+| 15 | Unit testing with BATS |
+
+## Phase 4 — Quality, Security & Performance (16–20)
+| Day | Topic |
+|-----|-------|
+| 16 | Pre-commit hooks & linting |
+| 17 | Security fundamentals |
+| 18 | Zero-trust security pipeline |
+| 19 | Performance optimization |
+| 20 | Unix tooling at scale |
+
+## Phase 5 — DevOps Automation (21–25)
+| Day | Topic |
+|-----|-------|
+| 21 | Capstone I: Distributed Log Analyzer Pro |
+| 22 | Rootless containers (Buildah/Podman/Cosign) |
+| 23 | Modular CI/CD framework |
+| 24 | Git-driven auto-deploy (GitOps) |
+| 25 | Kubernetes automation with kubectl |
+
+## Phase 6 — Platform Engineering / Principal (26–30)
+| Day | Topic |
+|-----|-------|
+| 26 | Kubernetes Operators & CRDs |
+| 27 | ArgoCD App of Apps |
+| 28 | Chaos Engineering |
+| 29 | Self-Healing systems |
+| 30 | Cost Optimization / FinOps |

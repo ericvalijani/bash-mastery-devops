@@ -1,0 +1,23 @@
+name: Security
+on:
+  push:
+  pull_request:
+  schedule:
+    - cron: "0 3 * * 1"
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: gitleaks
+        uses: gitleaks/gitleaks-action@v2
+      - name: trivy filesystem
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: fs
+          severity: HIGH,CRITICAL
+          exit-code: "1"
+      - name: semgrep
+        uses: returntocorp/semgrep-action@v1
+        with:
+          config: p/ci p/secrets
