@@ -1,0 +1,4 @@
+kind: Deployment
+name: api
+replicas: 2
+image: api:v1
