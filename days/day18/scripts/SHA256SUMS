@@ -1,0 +1,4 @@
+4f72f77dc90739dd6896b8cf8262c0de55bee79e032e753faae8e25f7393ad44  ./deploy-guard.sh
+677eef426617a273d8d85ec52203835a6097069c99976e1157aaa9e984c53edb  ./real-sign.sh
+b477f98ab5a9ca37def9f762cbdddce605dc971dd05576d1159ee7549bae0462  ./verify-artifact.sh
+fb577ad76743d3e714eb92853c0b13a85bde657be9aa1312f315a6ff489be2f9  ./zero-trust-pipeline.sh
