@@ -11,7 +11,7 @@ module from those shared building blocks.
 | File | Path | What it does |
 |---|---|---|
 | **Shared libraries** | `lib/logging.sh`, `lib/retry.sh`, `lib/lock.sh`, `lib/validator.sh`, `lib/utils.sh` | The single source of truth for cross-cutting helpers |
-| **Backup Manager** (module) | `days/day14/scripts/backup-manager.sh` | A real backup module built *only* from `/lib` — no re-implemented helpers | 
+| **Backup Manager** (module) | `days/day14/scripts/backup-manager.sh` | A real backup module built *only* from `/lib` — no re-implemented helpers |
 
 ---
 

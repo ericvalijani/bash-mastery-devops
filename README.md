@@ -31,7 +31,7 @@ bats -r days                           # test everything
 
 ## 🗺️ The 30-day path
 
-Six phases, five days each. 🟢/🟡 = reworked from the original course · 🔴 = new.
+Six phases, five days each.
 
 | Phase | Days | Theme |
 |:---:|:---:|:---|
@@ -78,30 +78,30 @@ runnable scripts, and its test suite.
 | Day | Topic | Lesson |
 |:---:|:---|:---:|
 | 16 | Pre-commit hooks & linting — the quality gate, per-day runs | [open »](days/day16/README.md) |
-| 17 | Security fundamentals 🔴 | _coming next_ |
-| 18 | Zero-trust security pipeline 🔴 | _planned_ |
-| 19 | Performance optimization 🔴 | _planned_ |
-| 20 | Unix tooling at scale 🔴 | _planned_ |
+| 17 | Security fundamentals — secret scanning, permission hardening, safe patterns | [open »](days/day17/README.md) |
+| 18 | Zero-trust security pipeline — artifact verification, signed stages, deploy guard | [open »](days/day18/README.md) |
+| 19 | Performance optimization — benchmarking, profiling, hot-path tuning | [open »](days/day19/README.md) |
+| 20 | Unix tooling at scale — field extraction, histograms, streaming pipelines | [open »](days/day20/README.md) |
 
 ### ⚙️ Phase 5 — DevOps Automation
 | Day | Topic | Lesson |
 |:---:|:---|:---:|
-| 21 | Capstone I — Distributed Log Analyzer Pro 🔴 | _planned_ |
-| 22 | Rootless containers (Buildah/Podman/Cosign) 🔴 | _planned_ |
-| 23 | Modular CI/CD framework 🔴 | _planned_ |
-| 24 | Git-driven auto-deploy (GitOps) 🔴 | _planned_ |
-| 25 | Kubernetes automation with kubectl 🔴 | _planned_ |
+| 21 | Capstone I — Distributed Log Analyzer Pro — parse, aggregate & report web logs | [open »](days/day21/README.md) |
+| 22 | Rootless containers — Buildah/Podman/Cosign, rootless runs, image audit | [open »](days/day22/README.md) |
+| 23 | Modular CI/CD framework — staged pipelines, fail-fast, timing | [open »](days/day23/README.md) |
+| 24 | Git-driven auto-deploy (GitOps) — reconcile, drift detection, prune | [open »](days/day24/README.md) |
+| 25 | Kubernetes automation with kubectl — safe apply, context guard, protected contexts | [open »](days/day25/README.md) |
 
 ### 🏛️ Phase 6 — Platform Engineering (Principal)
 | Day | Topic | Lesson |
 |:---:|:---|:---:|
-| 26 | Kubernetes Operators & CRDs 🔴 | _planned_ |
-| 27 | ArgoCD App of Apps 🔴 | _planned_ |
-| 28 | Chaos Engineering 🔴 | _planned_ |
-| 29 | Self-Healing systems 🔴 | _planned_ |
-| 30 | Cost Optimization / FinOps 🔴 | _planned_ |
+| 26 | Kubernetes Operators & CRDs — reconcile loop, status subresource, self-heal | [open »](days/day26/README.md) |
+| 27 | ArgoCD App-of-Apps — leaf & root apps, honest sync status, drift gate | [open »](days/day27/README.md) |
+| 28 | Chaos Engineering — steady-state checks, blast radius, reproducible experiments | [open »](days/day28/README.md) |
+| 29 | Self-Healing systems — liveness probes, restart policy, CrashLoopBackOff | [open »](days/day29/README.md) |
+| 30 | Cost & FinOps — spend report, waste/risk detection, right-sizing gate | [open »](days/day30/README.md) |
 
-> Full map with source legend: **[docs/curriculum.md](docs/curriculum.md)**
+> Full curriculum index: **[docs/curriculum.md](docs/curriculum.md)**
 
 ## 🗂️ Repository layout
 
@@ -121,7 +121,7 @@ bash-mastery-devops/
 - **pre-commit** — shfmt + shellcheck + gitleaks + hygiene hooks. Run per day on
   only that day's files:
   `pre-commit run --files days/dayNN/scripts/*.sh days/dayNN/tests/*.bats`
-  (`--all-files` is reserved for the final pass once all days ship.)
+  or across the whole repo with `pre-commit run --all-files`.
 - **BATS** — every day has a suite; `bats -r days` runs them all.
 - **CI** — `.github/workflows/` runs lint + tests + security on every push.
 

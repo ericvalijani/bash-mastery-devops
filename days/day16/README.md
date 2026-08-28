@@ -72,4 +72,4 @@ bash days/day16/scripts/run-checks.sh
 | All (final only) | `pre-commit run --all-files` |
 | Same in CI | `.github/workflows/ci.yml` |
 
-Next up: **Day 17 — Security fundamentals** — the first 🔴 brand-new day, delivered on its own.
+Next up: **Day 17 — Security fundamentals**.

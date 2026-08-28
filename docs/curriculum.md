@@ -1,4 +1,4 @@
-# Curriculum — 30 Days to Principal (rebalanced)
+# Curriculum — 30 Days to Principal
 
 One concept per day. Every day ships a lesson (`README.md`), runnable
 script(s), and a BATS suite. Pre-commit + BATS gate every day from Day 1.

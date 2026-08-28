@@ -20,7 +20,7 @@ Then wire it into a real, argument-driven backup script.
 
 | Parameter | Meaning |
 |---|---|
-| `$0` | script name | 
+| `$0` | script name |
 | `$1`, `$2`, ... | first, second argument |
 | `$#` | number of arguments |
 | `$@` | all arguments as separate quoted words (**use `"$@"`**) |
