@@ -16,10 +16,13 @@ doesn't reinvent them.
 | Path | Purpose |
 |---|---|
 | `lib/realmode.sh` | Shared helpers for every Option-2 script: tool-presence checks with install hints (`rm_require_tools`), a consistent REAL-MODE banner (`rm_banner`), and a confirm guard (`rm_confirm`). |
+| `bootstrap.sh` | One `kind` cluster lifecycle for the Kubernetes days (25–30): `up` (idempotent create, prints the context on stdout), `up --metrics` (installs metrics-server), `down`, `status`. Reused so no day reinvents cluster setup. |
+| `tests/bootstrap.bats` | BATS suite for `bootstrap.sh`, driven by stub `kind`/`kubectl` (`$KIND`/`$KUBECTL`) — no real Docker needed. |
 
-More shared infrastructure lands here as later days gain their real option —
-for example a single `kind` cluster bootstrap reused by the Kubernetes days
-(25–30).
+> **Maintenance note:** whenever a new shared platform piece is added here, add
+> a row to this table so the foundation stays self-documenting.
+
+More shared infrastructure lands here as later days gain their real option.
 
 ## The contract every real script follows
 
