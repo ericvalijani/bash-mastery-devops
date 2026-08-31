@@ -17,6 +17,7 @@ Day 29's self-healing something real to recover from.
 | **Chaos lib** | `days/day28/scripts/chaos-lib.sh` | Steady-state, blast cap, seeded victim pick |
 | **Kill** | `days/day28/scripts/chaos-kill.sh` | Inject a fault: delete some pods, safely |
 | **Experiment** | `days/day28/scripts/chaos-run.sh` | hypothesis → inject → heal → verify |
+| **Real chaos** | `days/day28/scripts/real-chaos.sh` | Option 2: the same experiment against a live cluster (see below) |
 
 ---
 
@@ -82,6 +83,75 @@ With **no** `--heal-cmd`, the system can't recover on its own — the experiment
 bash days/day28/scripts/chaos-kill.sh --state-dir /tmp/cluster --name frontend \
   --expect 5 --count 2 --seed 7 --dry-run   # lists victims, kills nothing
 ```
+
+---
+
+## 🚀 Option 2 — real chaos on a live cluster (`real-chaos.sh`)
+
+Everything above runs offline (pods are files) — that's the **default** and
+what CI tests. When you have a real kind cluster with workloads (e.g. the
+Day 27 `frontend`/`api` apps), `real-chaos.sh` injects the **same disciplined
+fault into real Kubernetes** by deleting real pods. The Deployment's
+ReplicaSet then recreates them — the self-healing Day 29 builds on.
+
+The three rules are enforced against real pods, and **deleting is opt-in**:
+without `--apply` it only previews the victims (safe by default on a real
+cluster). Set your context first (it's not shared between terminals):
+
+```bash
+CTX=kind-bash-mastery
+```
+
+**Preview** — see who would die, touch nothing:
+
+```bash
+bash days/day28/scripts/real-chaos.sh kill \
+  --context "$CTX" --namespace frontend --selector app=frontend \
+  --expect 3 --count 1 --seed 7
+```
+
+**Inject** — actually delete (add `--apply`):
+
+```bash
+bash days/day28/scripts/real-chaos.sh kill \
+  --context "$CTX" --namespace frontend --selector app=frontend \
+  --expect 3 --count 1 --seed 7 --apply
+```
+
+Watch the ReplicaSet bring it back:
+
+```bash
+kubectl --context "$CTX" -n frontend get pods -l app=frontend -w
+```
+
+**Full experiment** — steady state → inject → wait for natural recovery → verify:
+
+```bash
+bash days/day28/scripts/real-chaos.sh run \
+  --context "$CTX" --namespace frontend --selector app=frontend \
+  --expect 3 --count 1 --seed 7 --wait 60 --apply
+```
+
+```
+[1/4] steady state: observed=3 expected=3
+[2/4] injecting fault (count=1 seed=7)
+KILL frontend-<hash>
+[3/4] waiting up to 60s for the cluster to self-heal
+[4/4] verify: observed=3 expected=3
+----------------------------
+EXPERIMENT PASSED: system recovered to steady state
+```
+
+> **Safety rails (same as offline):** refuses to inject unless `observed ==
+> --expect`; never exceeds `--max-percent` (default 50%); `--seed` makes victim
+> selection reproducible; protected contexts (`$PROTECTED_CONTEXTS`, default
+> `prod,production`) require `--confirm`. Degrades gracefully (**exit 3**) when
+> kubectl or the cluster is missing.
+
+> `--expect` must match the **real** replica count. For the Day 27 apps that's
+> the `replicas:` in `days/day27/examples/desired/<app>/deployment.yaml`
+> (`frontend` = 3, `api` = 2). Check live with
+> `kubectl --context "$CTX" -n frontend get pods -l app=frontend`.
 
 ---
 
