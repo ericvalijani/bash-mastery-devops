@@ -16,6 +16,7 @@ control loop continuously drive reality back toward it.
 | **Health lib** | `days/day29/scripts/health-lib.sh` | Liveness probe, healthy count, restart bookkeeping |
 | **Heal** | `days/day29/scripts/heal.sh` | One remediation pass (restart policy + backoff) |
 | **Watchdog** | `days/day29/scripts/watchdog.sh` | The control loop: heal until healthy or budget spent |
+| **Real heal** | `days/day29/scripts/real-heal.sh` | Option 2: the same control loop against a live cluster (see below) |
 
 ---
 
@@ -91,6 +92,74 @@ watchdog: system still degraded after 5 pass(es)   # exit 1
 
 Stable pods reset their restart counter, so transient blips don't count against
 a pod forever — only sustained failure reaches CrashLoopBackOff.
+
+---
+
+## 🚀 Option 2 — real self-healing on a live cluster (`real-heal.sh`)
+
+The offline scripts imitate a control loop over the file-based cluster — that's
+the **default** and what CI tests. On a real cluster Kubernetes already restarts
+dead containers, so a real watchdog focuses on the parts K8s does **not** do for
+you:
+
+1. **Reconcile drift** — if the Deployment's replica count was changed away from
+   the desired value, scale it back.
+2. **Surface crashloops** — detect pods stuck in `CrashLoopBackOff` (or past a
+   restart budget) that will never recover on their own.
+3. **Converge** — loop until the Deployment reports all replicas ready, or the
+   iteration budget runs out (degraded).
+
+This pairs directly with Day 28: kill pods with `real-chaos.sh`, then watch
+`real-heal.sh` (and Kubernetes) drive the Deployment back to steady state.
+Scaling is **opt-in** — without `--apply` it only reports (safe by default).
+Set your context first (it isn't shared between terminals):
+
+```bash
+CTX=kind-bash-mastery
+```
+
+**One reconcile pass (report only):**
+
+```bash
+bash days/day29/scripts/real-heal.sh heal \
+  --context "$CTX" --namespace frontend --deployment frontend --replicas 3
+```
+
+**Reconcile for real (add `--apply`):**
+
+```bash
+bash days/day29/scripts/real-heal.sh heal \
+  --context "$CTX" --namespace frontend --deployment frontend --replicas 3 --apply
+```
+
+**The watchdog loop — turn Day 28's chaos into a recovery:**
+
+```bash
+# 1) inject with Day 28
+bash days/day28/scripts/real-chaos.sh kill \
+  --context "$CTX" --namespace frontend --selector app=frontend \
+  --expect 3 --count 1 --seed 7 --apply
+
+# 2) let the watchdog converge the Deployment back to steady state
+bash days/day29/scripts/real-heal.sh watch \
+  --context "$CTX" --namespace frontend --deployment frontend --replicas 3 \
+  --apply --max-iterations 10 --interval 5
+```
+
+```
+=== watchdog pass 1/10 ===
+----------------------------
+reconciled: healthy 3/3 ready, 0 crashloop
+watchdog: Deployment healthy after 1 pass(es)
+```
+
+> **Safety rails:** refuses protected contexts (`$PROTECTED_CONTEXTS`, default
+> `prod,production`) without `--confirm`; `--max-restarts` sets the crashloop
+> budget; degrades gracefully (**exit 3**) when kubectl or the cluster is
+> missing. `--replicas` is the desired count — for the Day 27 apps that's the
+> `replicas:` in `days/day27/examples/desired/<app>/deployment.yaml`
+> (`frontend` = 3, `api` = 2). Pod crashloops are matched by `--selector`
+> (default `app=<deployment>`).
 
 ---
 
