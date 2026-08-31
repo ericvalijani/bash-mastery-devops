@@ -16,6 +16,7 @@ model you've used all along.
 | **Cost lib** | `days/day30/scripts/cost-lib.sh` | Spec parsing + cost math |
 | **Cost report** | `days/day30/scripts/cost-report.sh` | Monthly spend, per workload + total |
 | **Right-size** | `days/day30/scripts/rightsize.sh` | Waste/risk detection + recommendations |
+| **Real cost** | `days/day30/scripts/real-cost.sh` | Option 2: the same cost + right-sizing against a live cluster (see below) |
 
 ---
 
@@ -85,6 +86,92 @@ bash days/day30/scripts/rightsize.sh --dir k8s/ --low 25 --high 85 || {
   echo "::warning::workloads need right-sizing"; exit 1;
 }
 ```
+
+---
+
+## 🚀 Option 2 — real cost & FinOps on a live cluster (`real-cost.sh`)
+
+The offline scripts price `*.workload` files — that's the **default** and what CI
+tests. On a real cluster the exact same two numbers come straight from
+Kubernetes, so `real-cost.sh` reuses the offline cost math (`cost-lib.sh`) and
+reads:
+
+- **what you reserve (and pay for)** = each Deployment's resource *requests*
+  (`kubectl get deploy ... .spec...containers[0].resources.requests`)
+- **what you actually use** = live metrics (`kubectl top pods`, via
+  metrics-server)
+
+The gap between them is the waste FinOps hunts. Both subcommands are
+**read-only** — they never mutate the cluster. Set your context first:
+
+```bash
+CTX=kind-bash-mastery
+```
+
+**What does the namespace cost?**
+
+```bash
+bash days/day30/scripts/real-cost.sh report --context "$CTX" --namespace frontend
+```
+
+```
+WORKLOAD         REPLICAS   CPU(m)  MEM(Mi)   COST/MO($)
+---------------- --------   ------  ------- ------------
+frontend                3      500      512        38.33
+---------------- --------   ------  ------- ------------
+TOTAL                                              38.33
+```
+
+**Where's the waste? (requests vs live usage — a FinOps CI gate)**
+
+```bash
+bash days/day30/scripts/real-cost.sh rightsize --context "$CTX" --namespace frontend \
+  --low 30 --high 90 --target 60
+```
+
+```
+WORKLOAD       STATUS      CPU%      MEM%    REC_CPU    REC_MEM   SAVE/MO$
+-------------- ------  --------  --------  ---------  ---------  ---------
+frontend       WASTE        20%       39%        167        334      24.13
+-------------- ------  --------  --------  ---------  ---------  ---------
+Potential monthly savings: $24.13
+RESULT: workloads need right-sizing   # exit 1
+```
+
+> **Notes & safety rails:** `rightsize` needs **metrics-server** installed —
+> without it (`kubectl top` fails) the command degrades gracefully with
+> **exit 3** rather than guessing. Usage is matched per Deployment by
+> `--selector` (default `app=<deployment>`). Prices/thresholds
+> (`--cpu-price`/`--mem-price`/`--hours`/`--low`/`--high`/`--target`) mirror the
+> offline flags. Both commands degrade to exit 3 when kubectl or the cluster is
+> missing.
+
+### Installing metrics-server on kind (for `rightsize`)
+
+A fresh kind cluster has no metrics-server, so `kubectl top` (and therefore
+`rightsize`) won't work until you add one. Note that `--kubelet-insecure-tls`
+is **not** a `kubectl` flag — it's an argument to the metrics-server container,
+so you apply the manifest first, then patch the Deployment to add it (kind's
+kubelet serves a self-signed cert that metrics-server otherwise rejects):
+
+```bash
+CTX=kind-bash-mastery
+
+# 1) install metrics-server
+kubectl --context "$CTX" apply -f \
+  https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
+
+# 2) trust kind's kubelet cert (this is where --kubelet-insecure-tls belongs)
+kubectl --context "$CTX" -n kube-system patch deployment metrics-server --type=json \
+  -p='[{"op":"add","path":"/spec/template/spec/containers/0/args/-","value":"--kubelet-insecure-tls"}]'
+
+# 3) wait for rollout, then confirm metrics flow (give it ~30-60s for the first scrape)
+kubectl --context "$CTX" -n kube-system rollout status deploy/metrics-server
+kubectl --context "$CTX" top pods -A     # prints numbers once ready
+```
+
+`report` works **without** metrics-server (it only reads requests); only
+`rightsize` needs it.
 
 ---
 
