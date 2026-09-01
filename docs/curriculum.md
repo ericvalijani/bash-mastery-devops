@@ -56,3 +56,28 @@ script(s), and a BATS suite. Pre-commit + BATS gate every day from Day 1.
 | 28 | Chaos Engineering |
 | 29 | Self-Healing systems |
 | 30 | Cost Optimization / FinOps |
+
+## Capstone project — devops-platform
+
+After Day 30, the platform days come together in one runnable, end-to-end
+project under [`projects/devops-platform/`](../projects/devops-platform/README.md):
+a GitOps-managed, self-healing, cost-observable platform on Kubernetes, operated
+with the scripts built during the course. Each of Days 22–30 maps to a real
+command:
+
+| Day | Skill | Capstone command |
+|-----|-------|------------------|
+| 22 | Containers & images | backend/frontend `Dockerfile` |
+| 23 | CI/CD | `.github/workflows/capstone.yml` |
+| 24 | GitOps foundations | `gitops/` app-of-apps |
+| 25 | kubectl plumbing | all real commands + `status` |
+| 26 | Operators / reconcile | `capstone.sh operate` |
+| 27 | ArgoCD | `capstone.sh up` / `deploy` |
+| 28 | Chaos engineering | `capstone.sh chaos` |
+| 29 | Self-healing | `capstone.sh heal` |
+| 30 | Cost & FinOps | `capstone.sh cost` |
+
+Provision with the default scripts (`capstone.sh up`, needs only
+Docker + kind + kubectl) or optionally with Terraform. No Helm or Vagrant
+required. An offline `capstone.sh validate` keeps the project CI-green with no
+cluster.

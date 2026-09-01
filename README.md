@@ -21,13 +21,17 @@ and pre-commit + BATS gate the repo from **Day 1**.
 
 ```bash
 git clone <this repo> && cd bash-mastery-devops
-cp .env.example .env               # fill in your values (.env is gitignored)
 pip install --user pre-commit && pre-commit install
 
 bash days/day01/scripts/variables.sh   # run a lesson
 bats days/day01/tests                  # test a lesson
 bats -r days                           # test everything
 ```
+
+> **`.env` is only needed for the Day 10 lesson** (safe config loading). No other
+> day — and no test/CI run — requires it. When you get to Day 10, run
+> `cp .env.example .env` and fill in your values (`.env` is gitignored; never
+> commit real secrets).
 
 ## 🗺️ The 30-day path
 
@@ -102,6 +106,21 @@ runnable scripts, and its test suite.
 | 30 | Cost & FinOps — spend report, waste/risk detection, right-sizing gate | [open »](days/day30/README.md) |
 
 > Full curriculum index: **[docs/curriculum.md](docs/curriculum.md)**
+
+## 🏗️ Capstone project — devops-platform
+
+The graduation project ties the platform days together into one real,
+end-to-end system: a **GitOps-managed, self-healing, cost-observable** platform
+on Kubernetes — operated entirely with the scripts you built. Every one of
+Days 22–30 maps to a real command (`up` · `deploy` · `operate` · `chaos` ·
+`heal` · `cost`), and an offline `validate` keeps it CI-green with no cluster.
+
+```bash
+bash projects/devops-platform/capstone.sh validate            # offline sanity check
+bash projects/devops-platform/capstone.sh up --context kind-bash-mastery
+```
+
+> Full guide: **[projects/devops-platform/README.md](projects/devops-platform/README.md)**
 
 ## 🗂️ Repository layout
 
